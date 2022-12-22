@@ -15,4 +15,14 @@ describe('handComparator', () => {
     expect(handComparator(['Kc'], ['Ac'])).toEqual(1);
     expect(handComparator(['Ac', 'Ad', 'Qd', 'Th', '2c'], ['Ac', 'Ad', 'Kd', 'Th', '2c'])).toEqual(1);
   });
+
+  describe('uneven card counts', () => {
+    it('returns 1 when the first hand has one less card', () => {
+      expect(handComparator(['Ac'], ['As', 'Kc'])).toEqual(1);
+    });
+
+    it('returns -1 when the second hand has one less card', () => {
+      expect(handComparator(['As', 'Kc'], ['Ac'])).toEqual(-1);
+    });
+  });
 });
