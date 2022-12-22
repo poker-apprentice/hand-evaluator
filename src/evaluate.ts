@@ -18,6 +18,8 @@ const HAND_SIZE = 5;
 
 const uniq = <T>(items: T[]) => Array.from(new Set(items));
 
+const max = <T>(items: T[]) => items.reduce((accum, current) => current > accum ? current : accum);
+
 const getStraights = (cards: Card[]): Card[][] => {
   const straights: Card[][] = [];
 
@@ -106,6 +108,46 @@ const getOfAKinds = (duplicates: Record<Rank, Card[]>, count: number): Card[][] 
     .filter((hand) => hand.length === count)
     .sort(handComparator);
 
+const getAllHandCombinations = ({
+  holeCards,
+  communityCards,
+  minimumHoleCards,
+  maximumHoleCards,
+}: Required<Options>): Card[][] => {
+  const sameMinMax = minimumHoleCards === maximumHoleCards;
+  const allHoleCardCombinations = new Array(sameMinMax ? 1 : maximumHoleCards - minimumHoleCards)
+    .fill(undefined)
+    .flatMap((i, index) => getCombinations(holeCards, index + minimumHoleCards + (sameMinMax ? 0 : 1)));
+
+  const remainingCardCounts = uniq(
+    allHoleCardCombinations.map((currentHoleCards) => {
+      const count = HAND_SIZE - currentHoleCards.length;
+      return count > communityCards.length ? communityCards.length : count;
+    }),
+  );
+
+  const remainingCardsMap = Object.fromEntries(
+    remainingCardCounts.map((count) => {
+      return [count, getCombinations(communityCards, count)];
+    }),
+  );
+
+  const allHandCombinations = allHoleCardCombinations.flatMap((currentHoleCards) => {
+    const remainingCardCount = HAND_SIZE - currentHoleCards.length;
+    const allCommunityCards = remainingCardsMap[remainingCardCount] ?? [];
+    if (allCommunityCards.length === 0) {
+      return [currentHoleCards];
+    }
+    return allCommunityCards.map((currentCommunityCards) => [...currentHoleCards, ...currentCommunityCards]);
+  });
+
+  // only include combinations that are the longest, as shorter combinations will
+  // never possibly be better due to not having kickers to improve their hand strenth
+  const longestCombination = max(allHandCombinations.map((cards) => cards.length));
+
+  return allHandCombinations.filter((cards) => cards.length === longestCombination);
+};
+
 const evaluateHand = (unsortedCards: Card[]) => {
   const cards = unsortedCards.sort(cardComparator);
   const straights = getStraights(cards);
@@ -187,31 +229,11 @@ export const evaluate = ({ holeCards, communityCards = [], ...options }: Options
     throw new Error('maximumHoleCards cannot be less then or equal to zero');
   }
 
-  const sameMinMax = minimumHoleCards === maximumHoleCards;
-  const allHoleCardCombinations = new Array(sameMinMax ? 1 : maximumHoleCards - minimumHoleCards)
-    .fill(undefined)
-    .flatMap((i, index) => getCombinations(holeCards, index + minimumHoleCards + (sameMinMax ? 0 : 1)));
-
-  const remainingCardCounts = uniq(
-    allHoleCardCombinations.map((currentHoleCards) => {
-      const count = HAND_SIZE - currentHoleCards.length;
-      return count > communityCards.length ? communityCards.length : count;
-    }),
-  );
-
-  const remainingCardsMap = Object.fromEntries(
-    remainingCardCounts.map((count) => {
-      return [count, getCombinations(communityCards, count)];
-    }),
-  );
-
-  const allHandCombinations = allHoleCardCombinations.flatMap((currentHoleCards) => {
-    const remainingCardCount = HAND_SIZE - currentHoleCards.length;
-    const allCommunityCards = remainingCardsMap[remainingCardCount] ?? [];
-    if (allCommunityCards.length === 0) {
-      return [currentHoleCards];
-    }
-    return allCommunityCards.map((currentCommunityCards) => [...currentHoleCards, ...currentCommunityCards]);
+  const allHandCombinations = getAllHandCombinations({
+    holeCards,
+    communityCards,
+    minimumHoleCards,
+    maximumHoleCards,
   });
 
   return allHandCombinations.map(evaluateHand).sort(compare)[0];
