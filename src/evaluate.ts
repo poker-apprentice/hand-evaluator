@@ -1,13 +1,13 @@
 import { compare } from './compare';
 import { rankOrder } from './constants';
-import { Card, EvaluatedHand, Hand, Rank, Strength, Suit } from './types';
+import { Card, EvaluatedHand, Rank, Strength, Suit } from './types';
 import { cardComparator } from './utils/cardComparator';
 import { getCombinations } from './utils/getCombinations';
 import { getRank } from './utils/getRank';
 import { getSuit } from './utils/getSuit';
 import { handComparator } from './utils/handComparator';
 
-interface Options {
+export interface EvaluateOptions {
   holeCards: Card[];
   communityCards?: Card[];
   minimumHoleCards?: number;
@@ -18,7 +18,7 @@ const HAND_SIZE = 5;
 
 const uniq = <T>(items: T[]) => Array.from(new Set(items));
 
-const max = <T>(items: T[]) => items.reduce((accum, current) => current > accum ? current : accum);
+const max = <T>(items: T[]) => items.reduce((accum, current) => (current > accum ? current : accum));
 
 const getStraights = (cards: Card[]): Card[][] => {
   const straights: Card[][] = [];
@@ -113,7 +113,7 @@ const getAllHandCombinations = ({
   communityCards,
   minimumHoleCards,
   maximumHoleCards,
-}: Required<Options>): Card[][] => {
+}: Required<EvaluateOptions>): Card[][] => {
   const sameMinMax = minimumHoleCards === maximumHoleCards;
   const allHoleCardCombinations = new Array(sameMinMax ? 1 : maximumHoleCards - minimumHoleCards)
     .fill(undefined)
@@ -212,7 +212,7 @@ const evaluateHand = (unsortedCards: Card[]) => {
   return { strength: Strength.HIGH_CARD, hand: getKickers([], cards) };
 };
 
-export const evaluate = ({ holeCards, communityCards = [], ...options }: Options): EvaluatedHand => {
+export const evaluate = ({ holeCards, communityCards = [], ...options }: EvaluateOptions): EvaluatedHand => {
   const minimumHoleCards = Math.max(0, options.minimumHoleCards ?? 0);
   const maximumHoleCards = Math.min(holeCards.length, options.maximumHoleCards ?? holeCards.length, HAND_SIZE);
 

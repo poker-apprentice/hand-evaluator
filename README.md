@@ -112,6 +112,57 @@ const result = [
 
 TODO
 
+### Helper Functions
+
+In addition to the core functions, there are some poker game-specific functions that wrap these core functions for ease of use.  These functions are effectively the same as calling the `evaluate` function directly with the appropriate `minimumHoleCards` and `maximumHoleCards` option values prepopulated.
+
+The functions also perform appropriate error checking/throwing to ensure that the `holeCards` and `communityCards` are of the correct length for each game.
+
+#### `evaluateHoldem`
+
+Evaluates a hand of Texas Hold'em.
+
+```ts
+import { evaluateHoldem } from 'poker-hand-evaluator';
+const hand = evaluateHoldem({
+  holeCards: ['As', 'Kd'],
+  communityCards: ['9h', '8d', '2c'],
+});
+```
+
+#### `evaluateOmaha`
+
+Evaluates a hand of Omaha.
+
+```ts
+import { evaluateOmaha } from 'poker-hand-evaluator';
+const hand = evaluateOmaha({
+  holeCards: ['Jc', 'Qd', '4h', '7c'],
+  communityCards: ['2c', 'Qs', '4c'],
+});
+```
+
+#### `evaluatePineapple`
+
+Evaluates a hand of Pineapple.
+
+```ts
+import { evaluatePineapple } from 'poker-hand-evaluator';
+const hand = evaluatePineapple({
+  holeCards: ['Jc', '7h', 'Qh'],
+  communityCards: ['9h', '8d', '2c', '3h', 'Td'],
+});
+```
+
+#### `evaluateStud`
+
+Evaluates a hand of Stud.
+
+```ts
+import { evaluateStud } from 'poker-hand-evaluator';
+const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d' ] });
+```
+
 ## Development
 
 TODO
