@@ -1,50 +1,110 @@
+import cloneDeep from 'lodash/cloneDeep';
+import { compare } from './compare';
 import { rankOrder } from './constants';
-import { Card, Hand } from './types';
+import { evaluate } from './evaluate';
+import { Card, Hand, Odds } from './types';
+import { getCombinations } from './utils/getCombinations';
 
 interface Options {
   communityCards: Card[];
   expectedCommunityCardCount: number;
   expectedHoleCardCount: number;
+  minimumHoleCardsUsed: number;
+  maximumHoleCardsUsed: number;
 }
 
-interface HelperOptions extends Options {
+interface HelperOptions extends Omit<Options, 'minimumHoleCardsUsed' | 'maximumHoleCardsUsed'> {
+  allHoleCards: Hand[];
   remainingCards: Card[];
+}
+
+interface Scenario {
+  allHoleCards: Hand[];
+  communityCards: Card[];
 }
 
 const allCards: Card[] = rankOrder
   .split('')
   .flatMap((rank) => ['c', 'd', 'h', 's'].map((suit) => `${rank}${suit}` as Card));
 
-const oddsHelper = (
-  hands: Hand[],
-  { communityCards, expectedCommunityCardCount, expectedHoleCardCount, remainingCards }: HelperOptions,
-): number[] => {
-  // 1. While communityCards.length < expectedCommunityCardCount & each
-  //    hands.length < expectedHoleCardCount, loop through each possible
-  //    `remainingCards` entry and assign it to each empty card position.
-  //    Use the `compare` function to determine the best hand(s).  (Note
-  //    there will be some ties.)
+const getAllScenarios = ({
+  allHoleCards,
+  communityCards,
+  expectedCommunityCardCount,
+  expectedHoleCardCount,
+  remainingCards,
+}: HelperOptions): Scenario[] => {
+  // Determine how many more cards need to be selected to fill any unspecified
+  // hole cards or community cards.
+  const remainingHoleCardCount = Math.max(
+    0,
+    allHoleCards.reduce((count, holeCards) => count + (expectedHoleCardCount - holeCards.length), 0),
+  );
+  const remainingCommunityCardCount = Math.max(0, expectedCommunityCardCount - communityCards.length);
+  const remainingCardCount = remainingHoleCardCount + remainingCommunityCardCount;
 
-  // 2. Return an array of numbers.  The array index represents the same
-  //    `hands` index provided to the function.  Each number represents
-  //    the calculated odds of that hand winning.
-  return [];
+  // Get all combinations of remaining cards that can be used.
+  const remainingCardCombinations = getCombinations(remainingCards, remainingCardCount);
+
+  // Generate all possible hole card + community card scenarios based upon the remaining cards.
+  return remainingCardCombinations.reduce((scenarios: Scenario[], cards) => {
+    const scenario = {
+      allHoleCards: cloneDeep(allHoleCards),
+      communityCards: cloneDeep(communityCards),
+    };
+    cards.forEach((card) => {
+      // Determine which set of hole cards or community cards to place the current card.
+      const placementIndex = scenario.allHoleCards.findIndex((hand) => hand.length < expectedHoleCardCount);
+
+      if (placementIndex === -1) {
+        scenario.communityCards.push(card);
+      } else {
+        scenario.allHoleCards[placementIndex].push(card);
+      }
+    });
+    scenarios.push(scenario);
+    return scenarios;
+  }, []);
 };
 
-export const odds = (
-  hands: Hand[],
-  { communityCards, expectedCommunityCardCount, expectedHoleCardCount }: Options,
-): number[] => {
-  // 1. TODO: determine all the possible remaining cards in the deck based
-  //    upon the accounted for cards in `hands` and `communityCards`.
-  const remainingCards: Card[] = [];
+export const odds = (allHoleCards: Hand[], options: Options): Odds[] => {
+  // Determine all the possible remaining cards in the deck based upon
+  // the accounted for cards in `allHoleCards` and `communityCards`.
+  const usedCards: Card[] = [...allHoleCards.flat(), ...options.communityCards];
+  const remainingCards: Card[] = allCards.filter((card) => !usedCards.includes(card));
 
-  // 2. TODO: call `oddsHelper` with all options & `remainingCards` value,
-  //    returning the value.
-  return oddsHelper(hands, {
-    communityCards,
-    expectedCommunityCardCount,
-    expectedHoleCardCount,
-    remainingCards,
-  });
+  const allScenarios = getAllScenarios({ ...options, allHoleCards, remainingCards });
+  const scenarioCount = allScenarios.length;
+
+  // Call `evaluate` on every scenario, then use the `compare` function to determine the winner for
+  // each scenario.  Return an array of objects containing the counts of possible winning
+  // scenarios, tying scenarios, and total number of scenarios.
+  return allScenarios.reduce((accum: Odds[], scenario) => {
+    const scenarioEvaluations = scenario.allHoleCards.map((holeCards) =>
+      evaluate({
+        holeCards,
+        communityCards: scenario.communityCards,
+        minimumHoleCards: options.minimumHoleCardsUsed,
+        maximumHoleCards: options.maximumHoleCardsUsed,
+      }),
+    );
+    const bestHandIndices = scenarioEvaluations.reduce(
+      (bestIndices: number[], evaluation, index) => {
+        const result = compare(evaluation, scenarioEvaluations[bestIndices[0]]);
+        if (result === 1) {
+          return bestIndices;
+        }
+        if (result === -1) {
+          return [index];
+        }
+        return bestIndices.includes(index) ? bestIndices : [...bestIndices, index];
+      },
+      [0],
+    );
+    const isTie = bestHandIndices.length > 1;
+    bestHandIndices.forEach((holeCardsIndex) => {
+      accum[holeCardsIndex][isTie ? 'ties' : 'wins'] += 1;
+    });
+    return accum;
+  }, allHoleCards.map(() => ({ wins: 0, ties: 0, total: scenarioCount })) as Odds[]);
 };

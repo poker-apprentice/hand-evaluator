@@ -22,3 +22,9 @@ export interface EvaluatedHand {
   strength: Strength;
   hand: Hand;
 }
+
+export interface Odds {
+  wins: number;
+  ties: number;
+  total: number;
+}

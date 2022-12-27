@@ -110,7 +110,28 @@ const result = [
 
 #### `odds`
 
-TODO
+Given a list of hands and community cards, determine how often each hand will win or tie.
+
+```ts
+import { odds } from 'pokher-hand-evaluator';
+
+const hand1 = ['As', 'Ks'];
+const hand2 = ['Jd', 'Jh'];
+
+const result = odds([hand1, hand2], {
+  communityCards: ['Qd', 'Js', '8d'],
+  expectedCommunityCardCount: 5,
+  expectedHoleCardCount: 2,
+  minimumHoleCardsUsed: 0,
+  maximumHoleCardsUsed: 2,
+});
+
+console.log(result);
+// => [
+//      { wins: 149, ties: 0, total: 990 },
+//      { wins: 841, ties: 0, total: 990 },
+//    ]
+```
 
 ### Helper Functions
 
@@ -160,7 +181,7 @@ Evaluates a hand of Stud.
 
 ```ts
 import { evaluateStud } from 'poker-hand-evaluator';
-const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d' ] });
+const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d'] });
 ```
 
 ## Development
