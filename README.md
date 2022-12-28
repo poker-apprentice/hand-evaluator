@@ -112,6 +112,8 @@ const result = [
 
 Given a list of hands and community cards, determine how often each hand will win or tie.
 
+Note: The implementation for this is currently exhaustive, and is not practical for scenarios missing more than about 1-2 cards worth of data.  A future enhancement will most likely utilize Monte Carlo simulations to approximate the results instead.
+
 ```ts
 import { Hand, odds } from 'pokher-hand-evaluator';
 
@@ -232,4 +234,43 @@ const result = oddsStud(allHoleCards);
 
 ## Development
 
-TODO
+Contributions are welcome.  Please create an issue in the project first to discuss any possible enhancements, bugs, or other changes prior to submitting a pull request.  Alternatively, browse existing issues if interested in providing a fix.
+
+### Environment Setup
+
+1. Install [yarn](https://classic.yarnpkg.com/lang/en/docs/install/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+2. Clone this repository: `git clone git@github.com:mhuggins/poker-hand-evaluator.git`
+3. Install dependencies: `yarn install`
+
+### Run tests
+
+To run the full test suite:
+
+```
+yarn test
+```
+
+To run a specific test:
+
+```
+yarn test compare           # matches test description
+yarn test compare.test.ts   # matches test file name
+```
+
+### Run linter
+
+```
+yarn lint
+```
+
+### Run formatter
+
+```
+yarn format
+```
+
+### Build package
+
+```
+yarn build
+```
