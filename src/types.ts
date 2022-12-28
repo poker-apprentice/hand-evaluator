@@ -23,6 +23,11 @@ export interface EvaluatedHand {
   hand: Hand;
 }
 
+export interface Scenario {
+  allHoleCards: Hand[];
+  communityCards: Card[];
+}
+
 export interface Odds {
   wins: number;
   ties: number;

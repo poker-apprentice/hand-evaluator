@@ -108,14 +108,62 @@ const result = [
 ].sort(compare);
 ```
 
+#### `oddsAsync`
+
+Given a list of hands and community cards, estimate how often each hand will win or tie using a [Monte Carlo simulation](https://en.wikipedia.org/wiki/Monte_Carlo_method) for roughly estimating the odds of a hand winning or tying.
+
+````ts
+import { Hand, oddsAsync } from 'poker-hand-evaluator';
+
+const hand1: Hand = ['As', 'Ks'];
+const hand2: Hand = ['Jd', 'Jh'];
+
+oddsAsync({
+  allHoleCards: [hand1, hand2],
+  communityCards: ['Qd', 'Js', '8d'],
+  expectedCommunityCardCount: 5,
+  expectedHoleCardCount: 2,
+  minimumHoleCardsUsed: 0,
+  maximumHoleCardsUsed: 2,
+  callback: (result) => {
+    console.log(result);
+  },
+});
+````
+
+Additional options can be provided to specify how long to run the simulation, and how many samples should be generated per iteration:
+
+- `samples`: The total number of simulations to run.
+- `samplesPerUpdate`: The number of simulations to run per iteration.
+
+The `oddsAsync` function returns another function that can be used abort/cancel the simulation.
+
+```ts
+const abort = oddsAsync({ /* snip */ });
+// later...
+abort();
+```
+
+```ts
+const abort = oddsAsync({
+  // snip
+  callback: (result) => {
+    console.log(result);
+    if (result.total >= 10000) {
+      abort();
+    }
+  },
+});
+```
+
 #### `odds`
 
 Given a list of hands and community cards, determine how often each hand will win or tie.
 
-Note: The implementation for this is currently exhaustive, and is not practical for scenarios missing more than about 1-2 cards worth of data.  A future enhancement will most likely utilize Monte Carlo simulations to approximate the results instead.
+Note: The implementation for this is exhaustive, and it is not practical for scenarios missing more than about 1-2 cards worth of data.  It is strongly suggested that the [`oddsAsync`](#oddsAsync) function be used instead.
 
 ```ts
-import { Hand, odds } from 'pokher-hand-evaluator';
+import { Hand, odds } from 'poker-hand-evaluator';
 
 const hand1: Hand = ['As', 'Ks'];
 const hand2: Hand = ['Jd', 'Jh'];
