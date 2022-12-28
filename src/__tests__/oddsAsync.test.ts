@@ -17,12 +17,56 @@ describe('oddsAsync', () => {
   };
 
   it('calls callback function with results', (next) => {
-    const abort = oddsAsync({
+    oddsAsync({
       ...options,
+      samples: 1000,
+      samplesPerUpdate: 1000,
       callback: (odds) => {
         expect(odds[0].total).toEqual(1000);
-        abort();
         next();
+      },
+    });
+  });
+
+  it('calculates the correct number of samples', (next) => {
+    const samples = 85;
+    const samplesPerUpdate = 10;
+    let callbackCount = 0;
+
+    oddsAsync({
+      ...options,
+      samples,
+      samplesPerUpdate,
+      callback: (odds) => {
+        callbackCount += 1;
+
+        const { total } = odds[0];
+
+        if (callbackCount === Math.ceil(samples / samplesPerUpdate)) {
+          expect(total).toEqual(samples);
+          next();
+        } else {
+          expect(total).toEqual(callbackCount * samplesPerUpdate);
+        }
+      },
+    });
+  });
+
+  it('aborts', (next) => {
+    let callbackCount = 0;
+    const maxIterations = 3;
+
+    const abort = oddsAsync({
+      ...options,
+      callback: () => {
+        callbackCount += 1;
+        if (callbackCount === maxIterations) {
+          abort();
+          setTimeout(() => {
+            expect(callbackCount).toEqual(maxIterations);
+            next();
+          }, 100);
+        }
       },
     });
   });

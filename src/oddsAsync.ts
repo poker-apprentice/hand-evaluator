@@ -68,7 +68,7 @@ const oddsAsyncHelper = (options: HelperOptions): void => {
 
   const sampleCount = Math.min(samplesPerUpdate, samples);
 
-  for (let i = 0; i < samplesPerUpdate; i += 1) {
+  for (let i = 0; i < sampleCount; i += 1) {
     const cards = getRandomCards(remainingCards, remainingCardCount);
     const scenario = buildScenario({
       allHoleCards,
