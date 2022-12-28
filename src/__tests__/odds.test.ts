@@ -65,6 +65,18 @@ describe('odds', () => {
         { wins: 1377, ties: 1109, total: 15180 },
       ]);
     });
+
+    it('all cards provided', () => {
+      const hands: Hand[] = [
+        ['As', 'Ks'],
+        ['Ad', 'Ac'],
+      ];
+
+      expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h', 'Th', '2s'] })).toEqual([
+        { wins: 1, ties: 0, total: 1 },
+        { wins: 0, ties: 0, total: 1 },
+      ]);
+    });
   });
 
   describe('game has no community cards', () => {
@@ -73,7 +85,7 @@ describe('odds', () => {
       expectedCommunityCardCount: 0,
       expectedHoleCardCount: 7,
       minimumHoleCardsUsed: 0,
-      maximumHoleCardsUsed: 5,
+      maximumHoleCardsUsed: 7,
     };
 
     it('heads-up (no ties)', () => {

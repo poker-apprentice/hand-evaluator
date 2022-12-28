@@ -113,10 +113,10 @@ const result = [
 Given a list of hands and community cards, determine how often each hand will win or tie.
 
 ```ts
-import { odds } from 'pokher-hand-evaluator';
+import { Hand, odds } from 'pokher-hand-evaluator';
 
-const hand1 = ['As', 'Ks'];
-const hand2 = ['Jd', 'Jh'];
+const hand1: Hand = ['As', 'Ks'];
+const hand2: Hand = ['Jd', 'Jh'];
 
 const result = odds([hand1, hand2], {
   communityCards: ['Qd', 'Js', '8d'],
@@ -135,7 +135,7 @@ console.log(result);
 
 ### Helper Functions
 
-In addition to the core functions, there are some poker game-specific functions that wrap these core functions for ease of use.  These functions are effectively the same as calling the `evaluate` function directly with the appropriate `minimumHoleCards` and `maximumHoleCards` option values prepopulated.
+In addition to the core functions, there are some poker game-specific functions that wrap these core functions for ease of use.  These functions are effectively the same as calling the `evaluate` of `odds` function directly with the appropriate option values prepopulated.
 
 The functions also perform appropriate error checking/throwing to ensure that the `holeCards` and `communityCards` are of the correct length for each game.
 
@@ -182,6 +182,52 @@ Evaluates a hand of Stud.
 ```ts
 import { evaluateStud } from 'poker-hand-evaluator';
 const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d'] });
+```
+
+#### `oddsHoldem`
+
+Calculates the odds of winning or tying a hand of Texas Hold'em.
+
+```ts
+import { oddsHoldem } from 'poker-hand-evaluator';
+const allHoleCards = [['As', 'Kd'], ['Ks', '8s']];
+const communityCards = ['Ts', 'Qs', 'Jd'];
+const result = oddsHoldem(allHoleCards, communityCards);
+```
+
+#### `oddsHoldem`
+
+Calculates the odds of winning or tying a hand of Omaha.
+
+```ts
+import { oddsOmaha } from 'poker-hand-evaluator';
+const allHoleCards = [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']];
+const communityCards = ['Ts', 'Qs', 'Jd'];
+const result = oddsOmaha(allHoleCards, communityCards);
+```
+
+#### `oddsPineapple`
+
+Calculates the odds of winning or tying a hand of Pineapple.
+
+```ts
+import { oddsPineapple } from 'poker-hand-evaluator';
+const allHoleCards = [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']];
+const communityCards = ['Ts', 'Qs', 'Jd'];
+const result = oddsPineapple(allHoleCards, communityCards);
+```
+
+#### `oddsStud`
+
+Calculates the odds of winning or tying a hand of Stud.
+
+```ts
+import { oddsStud } from 'poker-hand-evaluator';
+const allHoleCards = [
+  ['As', 'Kd', 'Ks', '8s', 'Ac'],
+  ['9s', '8s', 'Ts', '6s', '4h'],
+];
+const result = oddsStud(allHoleCards);
 ```
 
 ## Development

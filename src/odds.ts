@@ -5,7 +5,7 @@ import { evaluate } from './evaluate';
 import { Card, Hand, Odds } from './types';
 import { getCombinations } from './utils/getCombinations';
 
-interface Options {
+export interface OddsOptions {
   communityCards: Card[];
   expectedCommunityCardCount: number;
   expectedHoleCardCount: number;
@@ -13,7 +13,7 @@ interface Options {
   maximumHoleCardsUsed: number;
 }
 
-interface HelperOptions extends Omit<Options, 'minimumHoleCardsUsed' | 'maximumHoleCardsUsed'> {
+interface HelperOptions extends Omit<OddsOptions, 'minimumHoleCardsUsed' | 'maximumHoleCardsUsed'> {
   allHoleCards: Hand[];
   remainingCards: Card[];
 }
@@ -46,6 +46,10 @@ const getAllScenarios = ({
   // Get all combinations of remaining cards that can be used.
   const remainingCardCombinations = getCombinations(remainingCards, remainingCardCount);
 
+  if (remainingCardCombinations.length === 0) {
+    return [{ allHoleCards, communityCards }];
+  }
+
   // Generate all possible hole card + community card scenarios based upon the remaining cards.
   return remainingCardCombinations.reduce((scenarios: Scenario[], cards) => {
     const scenario = {
@@ -67,7 +71,7 @@ const getAllScenarios = ({
   }, []);
 };
 
-export const odds = (allHoleCards: Hand[], options: Options): Odds[] => {
+export const odds = (allHoleCards: Hand[], options: OddsOptions): Odds[] => {
   // Determine all the possible remaining cards in the deck based upon
   // the accounted for cards in `allHoleCards` and `communityCards`.
   const usedCards: Card[] = [...allHoleCards.flat(), ...options.communityCards];
