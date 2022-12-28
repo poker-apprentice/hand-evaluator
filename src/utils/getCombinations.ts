@@ -1,7 +1,7 @@
 // Generate all combinations of an array.
 export const getCombinations = <T>(sourceArray: T[], comboLength: number) => {
   const sourceLength = sourceArray.length;
-  if (comboLength > sourceLength || comboLength === 0) return [];
+  if (comboLength > sourceLength || comboLength <= 0) return [];
 
   const combos: T[][] = [];
 
