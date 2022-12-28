@@ -234,6 +234,19 @@ import { evaluateStud } from 'poker-hand-evaluator';
 const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d'] });
 ```
 
+#### `oddsHoldemAsync`
+
+Estimates the odds of winning or tying a hand of Texas Hold'em.
+
+```ts
+import { oddsHoldemAsync } from 'poker-hand-evaluator';
+const abort = oddsHoldemAsync({
+  allHoleCards: [['As', 'Kd'], ['Ks', '8s']],
+  communityCards: ['Ts', 'Qs', 'Jd'],
+  callback: (result) => console.log(result),
+});
+```
+
 #### `oddsHoldem`
 
 Calculates the odds of winning or tying a hand of Texas Hold'em.
@@ -245,7 +258,20 @@ const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsHoldem(allHoleCards, communityCards);
 ```
 
-#### `oddsHoldem`
+#### `oddsOmahaAsync`
+
+Estimates the odds of winning or tying a hand of Omaha.
+
+```ts
+import { oddsOmahaAsync } from 'poker-hand-evaluator';
+const abort = oddsOmahaAsync({
+  allHoleCards: [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']],
+  communityCards: ['Ts', 'Qs', 'Jd'],
+  callback: (result) => console.log(result),
+});
+```
+
+#### `oddsOmaha`
 
 Calculates the odds of winning or tying a hand of Omaha.
 
@@ -254,6 +280,19 @@ import { oddsOmaha } from 'poker-hand-evaluator';
 const allHoleCards = [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsOmaha(allHoleCards, communityCards);
+```
+
+#### `oddsPineappleAsync`
+
+Estimates the odds of winning or tying a hand of Pineapple.
+
+```ts
+import { oddsPineappleAsync } from 'poker-hand-evaluator';
+const abort = oddsPineappleAsync({
+  allHoleCards: [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']],
+  communityCards: ['Ts', 'Qs', 'Jd'],
+  callback: (result) => console.log(result),
+});
 ```
 
 #### `oddsPineapple`
@@ -265,6 +304,21 @@ import { oddsPineapple } from 'poker-hand-evaluator';
 const allHoleCards = [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsPineapple(allHoleCards, communityCards);
+```
+
+#### `oddsStudAsync`
+
+Estimates the odds of winning or tying a hand of Stud.
+
+```ts
+import { oddsStudAsync } from 'poker-hand-evaluator';
+const abort = oddsStudAsync({
+  allHoleCards: [
+    ['As', 'Kd', 'Ks', '8s', 'Ac'],
+    ['9s', '8s', 'Ts', '6s', '4h'],
+  ],
+  callback: (result) => console.log(result),
+});
 ```
 
 #### `oddsStud`

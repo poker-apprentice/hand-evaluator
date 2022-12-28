@@ -14,3 +14,8 @@ export { oddsHoldem } from './helpers/oddsHoldem';
 export { oddsOmaha } from './helpers/oddsOmaha';
 export { oddsPineapple } from './helpers/oddsPineapple';
 export { oddsStud } from './helpers/oddsStud';
+
+export { oddsHoldemAsync } from './helpers/oddsHoldemAsync';
+export { oddsOmahaAsync } from './helpers/oddsOmahaAsync';
+export { oddsPineappleAsync } from './helpers/oddsPineappleAsync';
+export { oddsStudAsync } from './helpers/oddsStudAsync';
