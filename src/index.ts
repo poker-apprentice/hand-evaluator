@@ -3,7 +3,7 @@ export type { Card, Hand, Odds, Strength } from './types';
 export { compare } from './compare';
 export { evaluate } from './evaluate';
 export { odds } from './odds';
-export { oddsAsync } from './oddsAsync';
+export { simulate, simulate as oddsAsync } from './simulate';
 
 export { evaluateHoldem } from './helpers/evaluateHoldem';
 export { evaluateOmaha } from './helpers/evaluateOmaha';
@@ -15,7 +15,7 @@ export { oddsOmaha } from './helpers/oddsOmaha';
 export { oddsPineapple } from './helpers/oddsPineapple';
 export { oddsStud } from './helpers/oddsStud';
 
-export { oddsHoldemAsync } from './helpers/oddsHoldemAsync';
-export { oddsOmahaAsync } from './helpers/oddsOmahaAsync';
-export { oddsPineappleAsync } from './helpers/oddsPineappleAsync';
-export { oddsStudAsync } from './helpers/oddsStudAsync';
+export { simulateHoldem, simulateHoldem as oddsHoldemAsync } from './helpers/simulateHoldem';
+export { simulateOmaha, simulateOmaha as oddsOmahaAsync } from './helpers/simulateOmaha';
+export { simulatePineapple, simulatePineapple as oddsPineappleAsync } from './helpers/simulatePineapple';
+export { simulateStud, simulateStud as oddsStudAsync } from './helpers/simulateStud';

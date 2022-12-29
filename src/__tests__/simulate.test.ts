@@ -1,7 +1,7 @@
-import { oddsAsync } from '../oddsAsync';
+import { simulate } from '../simulate';
 import { Card, Hand } from '../types';
 
-describe('oddsAsync', () => {
+describe('simulate', () => {
   const allHoleCards: Hand[] = [
     ['As', 'Ks'],
     ['Jd', 'Jh'],
@@ -17,7 +17,7 @@ describe('oddsAsync', () => {
   };
 
   it('calls callback function with results', (next) => {
-    oddsAsync({
+    simulate({
       ...options,
       samples: 1000,
       samplesPerUpdate: 1000,
@@ -33,7 +33,7 @@ describe('oddsAsync', () => {
     const samplesPerUpdate = 10;
     let callbackCount = 0;
 
-    oddsAsync({
+    simulate({
       ...options,
       samples,
       samplesPerUpdate,
@@ -56,7 +56,7 @@ describe('oddsAsync', () => {
     let callbackCount = 0;
     const maxIterations = 3;
 
-    const abort = oddsAsync({
+    const abort = simulate({
       ...options,
       callback: () => {
         callbackCount += 1;

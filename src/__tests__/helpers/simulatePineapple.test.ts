@@ -1,12 +1,12 @@
-import * as oddsAsyncModule from '../../oddsAsync';
-import { oddsPineappleAsync } from '../../helpers/oddsPineappleAsync';
+import * as simulateModule from '../../simulate';
+import { simulatePineapple } from '../../helpers/simulatePineapple';
 import { Card, Hand } from '../../types';
 
-describe('oddsPineappleAsync', () => {
+describe('simulatePineapple', () => {
   const callback = () => {};
 
-  it('delegates to `oddsAsync`', () => {
-    const oddsAsyncSpy = jest.spyOn(oddsAsyncModule, 'oddsAsync');
+  it('delegates to `simulate`', () => {
+    const simulateSpy = jest.spyOn(simulateModule, 'simulate');
 
     const allHoleCards: Hand[] = [
       ['As', 'Kd', 'Ts'],
@@ -14,10 +14,10 @@ describe('oddsPineappleAsync', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    const abort = oddsPineappleAsync({ allHoleCards, communityCards, callback });
+    const abort = simulatePineapple({ allHoleCards, communityCards, callback });
     abort();
 
-    expect(oddsAsyncSpy).toHaveBeenCalledWith({
+    expect(simulateSpy).toHaveBeenCalledWith({
       allHoleCards,
       communityCards,
       expectedCommunityCardCount: 5,
@@ -35,7 +35,7 @@ describe('oddsPineappleAsync', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => oddsPineappleAsync({ allHoleCards, communityCards, callback })).toThrow(
+    expect(() => simulatePineapple({ allHoleCards, communityCards, callback })).toThrow(
       'Each collection of hole cards accept a maximum of 3 elements',
     );
   });
@@ -47,7 +47,7 @@ describe('oddsPineappleAsync', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
-    expect(() => oddsPineappleAsync({ allHoleCards, communityCards, callback })).toThrow(
+    expect(() => simulatePineapple({ allHoleCards, communityCards, callback })).toThrow(
       'communityCards accepts a maximum of 5 elements',
     );
   });

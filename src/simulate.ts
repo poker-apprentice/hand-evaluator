@@ -4,7 +4,7 @@ import { evaluateScenario } from './utils/evaluateScenario';
 import { getRemainingCardCount } from './utils/getRemainingCardCount';
 import { getRemainingCards } from './utils/getRemainingCards';
 
-export interface OddsAsyncOptions {
+export interface SimulateOptions {
   allHoleCards: Hand[];
   communityCards: Card[];
   expectedCommunityCardCount: number;
@@ -18,7 +18,7 @@ export interface OddsAsyncOptions {
 
 export type Abort = () => void;
 
-interface HelperOptions extends OddsAsyncOptions {
+interface HelperOptions extends SimulateOptions {
   results: Odds[];
   isRunning: () => boolean;
 }
@@ -36,7 +36,7 @@ const getRandomCards = (cards: Card[], count: number): Card[] => {
   return [card, ...getRandomCards(updatedCards, count - 1)];
 };
 
-const oddsAsyncHelper = (options: HelperOptions): void => {
+const simulateHelper = (options: HelperOptions): void => {
   const {
     allHoleCards,
     communityCards,
@@ -90,7 +90,7 @@ const oddsAsyncHelper = (options: HelperOptions): void => {
   callback(results);
 
   setTimeout(() => {
-    oddsAsyncHelper({ ...options, samples: samples - sampleCount });
+    simulateHelper({ ...options, samples: samples - sampleCount });
   });
 };
 
@@ -103,12 +103,12 @@ const getAbortable = () => {
   return { abort, isRunning };
 };
 
-export const oddsAsync = (options: OddsAsyncOptions): Abort => {
+export const simulate = (options: SimulateOptions): Abort => {
   const { abort, isRunning } = getAbortable();
   const results = options.allHoleCards.map(() => ({ wins: 0, ties: 0, total: 0 }));
 
   setTimeout(() => {
-    oddsAsyncHelper({ ...options, results, isRunning });
+    simulateHelper({ ...options, results, isRunning });
   });
 
   return abort;

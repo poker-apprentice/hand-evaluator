@@ -1,7 +1,7 @@
-import { oddsAsync, OddsAsyncOptions } from '../oddsAsync';
+import { simulate, SimulateOptions } from '../simulate';
 
 type Options = Omit<
-  OddsAsyncOptions,
+  SimulateOptions,
   | 'expectedCommunityCardCount'
   | 'expectedHoleCardCount'
   | 'minimumHoleCardsUsed'
@@ -9,11 +9,11 @@ type Options = Omit<
   | 'communityCards'
 >;
 
-export const oddsStudAsync = (options: Options) => {
+export const simulateStud = (options: Options) => {
   if (options.allHoleCards.some((holeCards) => holeCards.length > 7)) {
     throw new Error('Each collection of hole cards accept a maximum of 7 elements');
   }
-  return oddsAsync({
+  return simulate({
     ...options,
     communityCards: [],
     expectedCommunityCardCount: 0,

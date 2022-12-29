@@ -108,44 +108,52 @@ const result = [
 ].sort(compare);
 ```
 
-#### `oddsAsync`
+#### `simulate` (alias: `oddsAsync`)
 
 Given a list of hands and community cards, estimate how often each hand will win or tie using a [Monte Carlo simulation](https://en.wikipedia.org/wiki/Monte_Carlo_method) for roughly estimating the odds of a hand winning or tying.
 
-````ts
-import { Hand, oddsAsync } from 'poker-hand-evaluator';
+```ts
+import { Hand, simulate } from 'poker-hand-evaluator';
 
 const hand1: Hand = ['As', 'Ks'];
 const hand2: Hand = ['Jd', 'Jh'];
 
-oddsAsync({
+simulate({
   allHoleCards: [hand1, hand2],
   communityCards: ['Qd', 'Js', '8d'],
   expectedCommunityCardCount: 5,
   expectedHoleCardCount: 2,
   minimumHoleCardsUsed: 0,
   maximumHoleCardsUsed: 2,
+  samples: 2000,
+  samplesPerUpdate: 500,
   callback: (result) => {
-    console.log(result);
+    const hand1WinPercent = (result[0].wins / result[0].total * 100).toFixed(1);
+    console.log(hand1WinPercent, result);
   },
 });
-````
 
-Additional options can be provided to specify how long to run the simulation, and how many samples should be generated per iteration:
+// => "13.8" [{ wins: 69, ties: 0, total: 500 }, { wins: 431, ties: 0, total: 500 }]
+// => "13.9" [{ wins: 139, ties: 0, total: 1000 }, { wins: 861, ties: 0, total: 1000 }]
+// => "15.4" [{ wins: 231, ties: 0, total: 1500 }, { wins: 1269, ties: 0, total: 1500 }]
+// => "14.8" [{ wins: 295, ties: 0, total: 2000 }, { wins: 1705, ties: 0, total: 2000 }]
+```
+
+Several options can be provided to specify how long to run the simulation, as well as how many samples should be generated per iteration.  The greater the number of samples, the closer the result should be to the actual calculated value.
 
 - `samples`: The total number of simulations to run.
 - `samplesPerUpdate`: The number of simulations to run per iteration.
 
-The `oddsAsync` function returns another function that can be used abort/cancel the simulation.
+The `simulate` function returns another function that can be used abort/cancel the simulation.
 
 ```ts
-const abort = oddsAsync({ /* snip */ });
+const abort = simulate({ /* snip */ });
 // later...
 abort();
 ```
 
 ```ts
-const abort = oddsAsync({
+const abort = simulate({
   // snip
   callback: (result) => {
     console.log(result);
@@ -160,7 +168,7 @@ const abort = oddsAsync({
 
 Given a list of hands and community cards, determine how often each hand will win or tie.
 
-Note: The implementation for this is exhaustive, and it is not practical for scenarios missing more than about 1-2 cards worth of data.  It is strongly suggested that the [`oddsAsync`](#oddsAsync) function be used instead.
+Note: The implementation for this is exhaustive, and it is not practical for scenarios missing more than about 1-2 cards worth of data.  It is strongly suggested that the [`simulate`](#simulate) function be used instead.
 
 ```ts
 import { Hand, odds } from 'poker-hand-evaluator';
@@ -234,19 +242,6 @@ import { evaluateStud } from 'poker-hand-evaluator';
 const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d'] });
 ```
 
-#### `oddsHoldemAsync`
-
-Estimates the odds of winning or tying a hand of Texas Hold'em.
-
-```ts
-import { oddsHoldemAsync } from 'poker-hand-evaluator';
-const abort = oddsHoldemAsync({
-  allHoleCards: [['As', 'Kd'], ['Ks', '8s']],
-  communityCards: ['Ts', 'Qs', 'Jd'],
-  callback: (result) => console.log(result),
-});
-```
-
 #### `oddsHoldem`
 
 Calculates the odds of winning or tying a hand of Texas Hold'em.
@@ -256,19 +251,6 @@ import { oddsHoldem } from 'poker-hand-evaluator';
 const allHoleCards = [['As', 'Kd'], ['Ks', '8s']];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsHoldem(allHoleCards, communityCards);
-```
-
-#### `oddsOmahaAsync`
-
-Estimates the odds of winning or tying a hand of Omaha.
-
-```ts
-import { oddsOmahaAsync } from 'poker-hand-evaluator';
-const abort = oddsOmahaAsync({
-  allHoleCards: [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']],
-  communityCards: ['Ts', 'Qs', 'Jd'],
-  callback: (result) => console.log(result),
-});
 ```
 
 #### `oddsOmaha`
@@ -282,19 +264,6 @@ const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsOmaha(allHoleCards, communityCards);
 ```
 
-#### `oddsPineappleAsync`
-
-Estimates the odds of winning or tying a hand of Pineapple.
-
-```ts
-import { oddsPineappleAsync } from 'poker-hand-evaluator';
-const abort = oddsPineappleAsync({
-  allHoleCards: [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']],
-  communityCards: ['Ts', 'Qs', 'Jd'],
-  callback: (result) => console.log(result),
-});
-```
-
 #### `oddsPineapple`
 
 Calculates the odds of winning or tying a hand of Pineapple.
@@ -304,21 +273,6 @@ import { oddsPineapple } from 'poker-hand-evaluator';
 const allHoleCards = [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsPineapple(allHoleCards, communityCards);
-```
-
-#### `oddsStudAsync`
-
-Estimates the odds of winning or tying a hand of Stud.
-
-```ts
-import { oddsStudAsync } from 'poker-hand-evaluator';
-const abort = oddsStudAsync({
-  allHoleCards: [
-    ['As', 'Kd', 'Ks', '8s', 'Ac'],
-    ['9s', '8s', 'Ts', '6s', '4h'],
-  ],
-  callback: (result) => console.log(result),
-});
 ```
 
 #### `oddsStud`
@@ -332,6 +286,60 @@ const allHoleCards = [
   ['9s', '8s', 'Ts', '6s', '4h'],
 ];
 const result = oddsStud(allHoleCards);
+```
+
+#### `simulateHoldem` (alias: `oddsHoldemAsync`)
+
+Estimates the odds of winning or tying a hand of Texas Hold'em.
+
+```ts
+import { simulateHoldem } from 'poker-hand-evaluator';
+const abort = simulateHoldem({
+  allHoleCards: [['As', 'Kd'], ['Ks', '8s']],
+  communityCards: ['Ts', 'Qs', 'Jd'],
+  callback: (result) => console.log(result),
+});
+```
+
+#### `simulateOmaha` (alias: `oddsOmahaAsync`)
+
+Estimates the odds of winning or tying a hand of Omaha.
+
+```ts
+import { simulateOmaha } from 'poker-hand-evaluator';
+const abort = simulateOmaha({
+  allHoleCards: [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']],
+  communityCards: ['Ts', 'Qs', 'Jd'],
+  callback: (result) => console.log(result),
+});
+```
+
+#### `simulatePineapple` (alias: `oddsPineappleAsync`)
+
+Estimates the odds of winning or tying a hand of Pineapple.
+
+```ts
+import { simulatePineapple } from 'poker-hand-evaluator';
+const abort = simulatePineapple({
+  allHoleCards: [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']],
+  communityCards: ['Ts', 'Qs', 'Jd'],
+  callback: (result) => console.log(result),
+});
+```
+
+#### `simulateStud` (alias: `oddsStudAsync`)
+
+Estimates the odds of winning or tying a hand of Stud.
+
+```ts
+import { simulateStud } from 'poker-hand-evaluator';
+const abort = simulateStud({
+  allHoleCards: [
+    ['As', 'Kd', 'Ks', '8s', 'Ac'],
+    ['9s', '8s', 'Ts', '6s', '4h'],
+  ],
+  callback: (result) => console.log(result),
+});
 ```
 
 ## Development
