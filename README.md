@@ -363,8 +363,29 @@ yarn test
 To run a specific test:
 
 ```
-yarn test compare           # matches test description
-yarn test compare.test.ts   # matches test file name
+yarn test compare.test.ts           # matches test file name
+yarn test -t "compare"              # matches test name/description
+```
+
+To run tests and run profiler:
+
+```
+yarn test:profile                   # runs full test suite
+yarn test:profile compare.test.ts   # matches test file name
+yarn test:profile -t "compare"      # matches test name/description
+```
+
+This will create one `.cpuprofile` file per test under the `profiles/` folder.  To open these files in Google Chrome:
+
+1. Navigate to [chrome://inspect].
+2. Click "Open dedicated DevTools for Node".
+3. Select the "Profiler" tab.
+4. Click the "Load" button, and select your file.
+
+To remove old `.cpuprofile` files:
+
+```
+yarn test:profile:clean
 ```
 
 ### Run linter
