@@ -81,6 +81,11 @@ const getDuplicates = (cards: Card[]): Record<Rank, Card[]> => {
   return duplicates;
 };
 
+const getOfAKinds = (cardGroups: Record<Rank, Card[]> | Record<Suit, Card[]>, count: number): Card[][] =>
+  Object.values(cardGroups)
+    .filter((cards) => cards.length === count)
+    .sort(handComparator);
+
 const getFlushes = (cards: Card[]): Card[][] => {
   const suitedCards: Record<Suit, Card[]> = { c: [], d: [], h: [], s: [] };
   cards.forEach((card) => {
@@ -93,20 +98,13 @@ const getFlushes = (cards: Card[]): Card[][] => {
   });
 
   // only return flushes made up of a legitimate hand size
-  return Object.values(suitedCards)
-    .filter((hand) => hand.length === HAND_SIZE)
-    .sort(handComparator);
+  return getOfAKinds(suitedCards, HAND_SIZE);
 };
 
 const getKickers = (hand: Card[], allCards: Card[]) => {
   const kickerCount = HAND_SIZE - hand.length;
   return allCards.filter((card) => !hand.includes(card)).slice(0, kickerCount);
 };
-
-const getOfAKinds = (duplicates: Record<Rank, Card[]>, count: number): Card[][] =>
-  Object.values(duplicates)
-    .filter((hand) => hand.length === count)
-    .sort(handComparator);
 
 const getAllHandCombinations = ({
   holeCards,

@@ -14,15 +14,17 @@ export const getCombinations = <T>(sourceArray: T[], comboLength: number) => {
     // For each element that remaines to be added to the working combination.
     for (let sourceIndex = currentIndex; sourceIndex < sourceLength; sourceIndex++) {
       // Get next (possibly partial) combination.
-      const next = [...workingCombo, sourceArray[sourceIndex]];
+      workingCombo.push(sourceArray[sourceIndex]);
 
       if (oneAwayFromComboLength) {
         // Combo of right length found, save it.
-        combos.push(next);
+        combos.push([...workingCombo]);
       } else {
         // Otherwise go deeper to add more elements to the current partial combination.
-        makeNextCombos(next, sourceIndex + 1, remainingCount - 1);
+        makeNextCombos(workingCombo, sourceIndex + 1, remainingCount - 1);
       }
+
+      workingCombo.pop();
     }
   };
 
