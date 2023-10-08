@@ -1,10 +1,10 @@
 {
-  "name": "poker-hand-evaluator",
-  "version": "1.0.0",
+  "name": "@poker-apprentice/hand-evaluator",
+  "version": "0.0.0",
   "description": "Evaluate the strength of a hand of poker",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/mhuggins/poker-hand-evaluator",
+  "repository": "https://github.com/poker-apprentice/hand-evaluator",
   "author": "Matt Huggins <matt.huggins@gmail.com>",
   "license": "MIT",
   "scripts": {

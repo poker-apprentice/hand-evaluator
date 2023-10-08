@@ -32,7 +32,7 @@ The following is a list of significant type definitions defined & utilized by th
 Given a list of hole cards and (optionally) community cards, determine the best possible poker hand and the strength of that hand.
 
 ```ts
-import { evaluate, Strength } from 'poker-hand-evaluator';
+import { evaluate, Strength } from '@poker-apprentice/hand-evaluator';
 
 const result = evaluate({
   holeCards: ['As', 'Qd'],
@@ -85,7 +85,7 @@ console.log(pineappleHand);
 Given two evaluated hands, returns -1, 0, or 1 to represent the stronger hand.
 
 ```ts
-import { compare, evaluate } from 'poker-hand-evaluator';
+import { compare, evaluate } from '@poker-apprentice/hand-evaluator';
 
 const hand1 = evaluate({ holeCards: ['9s', '8s', '5d', '6d', '6c', '7c', '2h'] });
 const hand2 = evaluate({ holeCards: [] });
@@ -98,7 +98,7 @@ console.log(result);
 This function can be used to sort any number of hands in an array.
 
 ```ts
-import { compare, evaluate } from 'poker-hand-evaluator';
+import { compare, evaluate } from '@poker-apprentice/hand-evaluator';
 
 const communityCards = ['Qs', 'Js', '7d'];
 const result = [
@@ -113,7 +113,7 @@ const result = [
 Given a list of hands and community cards, estimate how often each hand will win or tie using a [Monte Carlo simulation](https://en.wikipedia.org/wiki/Monte_Carlo_method) for roughly estimating the odds of a hand winning or tying.
 
 ```ts
-import { Hand, simulate } from 'poker-hand-evaluator';
+import { Hand, simulate } from '@poker-apprentice/hand-evaluator';
 
 const hand1: Hand = ['As', 'Ks'];
 const hand2: Hand = ['Jd', 'Jh'];
@@ -171,7 +171,7 @@ Given a list of hands and community cards, determine how often each hand will wi
 Note: The implementation for this is exhaustive, and it is not practical for scenarios missing more than about 1-2 cards worth of data.  It is strongly suggested that the [`simulate`](#simulate) function be used instead.
 
 ```ts
-import { Hand, odds } from 'poker-hand-evaluator';
+import { Hand, odds } from '@poker-apprentice/hand-evaluator';
 
 const hand1: Hand = ['As', 'Ks'];
 const hand2: Hand = ['Jd', 'Jh'];
@@ -202,7 +202,7 @@ The functions also perform appropriate error checking/throwing to ensure that th
 Evaluates a hand of Texas Hold'em.
 
 ```ts
-import { evaluateHoldem } from 'poker-hand-evaluator';
+import { evaluateHoldem } from '@poker-apprentice/hand-evaluator';
 const hand = evaluateHoldem({
   holeCards: ['As', 'Kd'],
   communityCards: ['9h', '8d', '2c'],
@@ -214,7 +214,7 @@ const hand = evaluateHoldem({
 Evaluates a hand of Omaha.
 
 ```ts
-import { evaluateOmaha } from 'poker-hand-evaluator';
+import { evaluateOmaha } from '@poker-apprentice/hand-evaluator';
 const hand = evaluateOmaha({
   holeCards: ['Jc', 'Qd', '4h', '7c'],
   communityCards: ['2c', 'Qs', '4c'],
@@ -226,7 +226,7 @@ const hand = evaluateOmaha({
 Evaluates a hand of Pineapple.
 
 ```ts
-import { evaluatePineapple } from 'poker-hand-evaluator';
+import { evaluatePineapple } from '@poker-apprentice/hand-evaluator';
 const hand = evaluatePineapple({
   holeCards: ['Jc', '7h', 'Qh'],
   communityCards: ['9h', '8d', '2c', '3h', 'Td'],
@@ -238,7 +238,7 @@ const hand = evaluatePineapple({
 Evaluates a hand of Stud.
 
 ```ts
-import { evaluateStud } from 'poker-hand-evaluator';
+import { evaluateStud } from '@poker-apprentice/hand-evaluator';
 const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d'] });
 ```
 
@@ -247,7 +247,7 @@ const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d'
 Calculates the odds of winning or tying a hand of Texas Hold'em.
 
 ```ts
-import { oddsHoldem } from 'poker-hand-evaluator';
+import { oddsHoldem } from '@poker-apprentice/hand-evaluator';
 const allHoleCards = [['As', 'Kd'], ['Ks', '8s']];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsHoldem(allHoleCards, communityCards);
@@ -258,7 +258,7 @@ const result = oddsHoldem(allHoleCards, communityCards);
 Calculates the odds of winning or tying a hand of Omaha.
 
 ```ts
-import { oddsOmaha } from 'poker-hand-evaluator';
+import { oddsOmaha } from '@poker-apprentice/hand-evaluator';
 const allHoleCards = [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsOmaha(allHoleCards, communityCards);
@@ -269,7 +269,7 @@ const result = oddsOmaha(allHoleCards, communityCards);
 Calculates the odds of winning or tying a hand of Pineapple.
 
 ```ts
-import { oddsPineapple } from 'poker-hand-evaluator';
+import { oddsPineapple } from '@poker-apprentice/hand-evaluator';
 const allHoleCards = [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsPineapple(allHoleCards, communityCards);
@@ -280,7 +280,7 @@ const result = oddsPineapple(allHoleCards, communityCards);
 Calculates the odds of winning or tying a hand of Stud.
 
 ```ts
-import { oddsStud } from 'poker-hand-evaluator';
+import { oddsStud } from '@poker-apprentice/hand-evaluator';
 const allHoleCards = [
   ['As', 'Kd', 'Ks', '8s', 'Ac'],
   ['9s', '8s', 'Ts', '6s', '4h'],
@@ -293,7 +293,7 @@ const result = oddsStud(allHoleCards);
 Estimates the odds of winning or tying a hand of Texas Hold'em.
 
 ```ts
-import { simulateHoldem } from 'poker-hand-evaluator';
+import { simulateHoldem } from '@poker-apprentice/hand-evaluator';
 const abort = simulateHoldem({
   allHoleCards: [['As', 'Kd'], ['Ks', '8s']],
   communityCards: ['Ts', 'Qs', 'Jd'],
@@ -306,7 +306,7 @@ const abort = simulateHoldem({
 Estimates the odds of winning or tying a hand of Omaha.
 
 ```ts
-import { simulateOmaha } from 'poker-hand-evaluator';
+import { simulateOmaha } from '@poker-apprentice/hand-evaluator';
 const abort = simulateOmaha({
   allHoleCards: [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']],
   communityCards: ['Ts', 'Qs', 'Jd'],
@@ -319,7 +319,7 @@ const abort = simulateOmaha({
 Estimates the odds of winning or tying a hand of Pineapple.
 
 ```ts
-import { simulatePineapple } from 'poker-hand-evaluator';
+import { simulatePineapple } from '@poker-apprentice/hand-evaluator';
 const abort = simulatePineapple({
   allHoleCards: [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']],
   communityCards: ['Ts', 'Qs', 'Jd'],
@@ -332,7 +332,7 @@ const abort = simulatePineapple({
 Estimates the odds of winning or tying a hand of Stud.
 
 ```ts
-import { simulateStud } from 'poker-hand-evaluator';
+import { simulateStud } from '@poker-apprentice/hand-evaluator';
 const abort = simulateStud({
   allHoleCards: [
     ['As', 'Kd', 'Ks', '8s', 'Ac'],
@@ -349,7 +349,7 @@ Contributions are welcome.  Please create an issue in the project first to discu
 ### Environment Setup
 
 1. Install [yarn](https://classic.yarnpkg.com/lang/en/docs/install/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
-2. Clone this repository: `git clone git@github.com:mhuggins/poker-hand-evaluator.git`
+2. Clone this repository: `git clone git@github.com:poker-apprentice/hand-evaluator.git`
 3. Install dependencies: `yarn install`
 
 ### Run tests
