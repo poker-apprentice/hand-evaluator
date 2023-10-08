@@ -1,4 +1,4 @@
-# poker-hand-evaluator
+# Poker Hand Evaluator
 
 A collection of useful functions for determining the strongest possible hand given a coordination of cards (hole cards & community cards), the strongest effective hand when comparing two hands, and the probability of winning the hand given what cards are known.
 
