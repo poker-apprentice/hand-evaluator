@@ -367,6 +367,8 @@ yarn test compare.test.ts           # matches test file name
 yarn test -t "compare"              # matches test name/description
 ```
 
+**NOTE:** Profiling is disabled until Node v20 is supported, per [this GitHub issue](https://github.com/hyj1991/v8-profiler-next/issues/65).
+
 To run tests and run profiler:
 
 ```
@@ -385,7 +387,7 @@ This will create one `.cpuprofile` file per test under the `profiles/` folder.  
 To remove old `.cpuprofile` files:
 
 ```
-yarn test:profile:clean
+yarn clean
 ```
 
 ### Run linter
