@@ -1,6 +1,6 @@
 {
   "name": "@poker-apprentice/hand-evaluator",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Evaluate the strength of a hand of poker",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
