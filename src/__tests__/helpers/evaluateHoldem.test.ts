@@ -21,7 +21,9 @@ describe('evaluateHoldem', () => {
     const holeCards: Card[] = ['As', 'Kd', 'Td'];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => evaluateHoldem({ holeCards, communityCards })).toThrow('holeCards accepts a maximum of 2 elements');
+    expect(() => evaluateHoldem({ holeCards, communityCards })).toThrow(
+      'holeCards accepts a maximum of 2 elements',
+    );
   });
 
   it('throws if too many community cards are provided', () => {

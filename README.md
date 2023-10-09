@@ -46,20 +46,22 @@ console.log(result.strength === Strength.STRAIGHT);
 // => true
 ```
 
-Note that the `evaluate` does not require 5 cards to determine the best hand.  The best hand possible with fewer cards or more cards can be determined as well.
+Note that the `evaluate` does not require 5 cards to determine the best hand. The best hand possible with fewer cards or more cards can be determined as well.
 
 ```ts
 console.log(evaluate({ holeCards: ['As', 'Ad'] }));
 // => { hand: ['As', 'Ad'], strength: 9 };
 
-console.log(evaluate({
-  holeCards: ['9s', '8s'],
-  communityCards: ['5d', '6d', '6c', '7c', '2h'],
-}));
+console.log(
+  evaluate({
+    holeCards: ['9s', '8s'],
+    communityCards: ['5d', '6d', '6c', '7c', '2h'],
+  }),
+);
 // => { hand: ['9s', '8s', '7c', '6d', '5d'], strength: 6 };
 ```
 
-By default, the `evaluate` function allows any number of hole cards or community cards to be used when determining the best possible poker hand.  If a specific number of hole cards must be used (e.g.: exactly 2 cards in Omaha or up to 2 cards in Pineapple), then the `minimumHoleCards` and `maximumHoleCards` options can be provided.
+By default, the `evaluate` function allows any number of hole cards or community cards to be used when determining the best possible poker hand. If a specific number of hole cards must be used (e.g.: exactly 2 cards in Omaha or up to 2 cards in Pineapple), then the `minimumHoleCards` and `maximumHoleCards` options can be provided.
 
 ```ts
 const omahaHand = evaluate({
@@ -128,7 +130,7 @@ simulate({
   samples: 2000,
   samplesPerUpdate: 500,
   callback: (result) => {
-    const hand1WinPercent = (result[0].wins / result[0].total * 100).toFixed(1);
+    const hand1WinPercent = ((result[0].wins / result[0].total) * 100).toFixed(1);
     console.log(hand1WinPercent, result);
   },
 });
@@ -139,7 +141,7 @@ simulate({
 // => "14.8" [{ wins: 295, ties: 0, total: 2000 }, { wins: 1705, ties: 0, total: 2000 }]
 ```
 
-Several options can be provided to specify how long to run the simulation, as well as how many samples should be generated per iteration.  The greater the number of samples, the closer the result should be to the actual calculated value.
+Several options can be provided to specify how long to run the simulation, as well as how many samples should be generated per iteration. The greater the number of samples, the closer the result should be to the actual calculated value.
 
 - `samples`: The total number of simulations to run.
 - `samplesPerUpdate`: The number of simulations to run per iteration.
@@ -147,7 +149,9 @@ Several options can be provided to specify how long to run the simulation, as we
 The `simulate` function returns another function that can be used abort/cancel the simulation.
 
 ```ts
-const abort = simulate({ /* snip */ });
+const abort = simulate({
+  /* snip */
+});
 // later...
 abort();
 ```
@@ -168,7 +172,7 @@ const abort = simulate({
 
 Given a list of hands and community cards, determine how often each hand will win or tie.
 
-Note: The implementation for this is exhaustive, and it is not practical for scenarios missing more than about 1-2 cards worth of data.  It is strongly suggested that the [`simulate`](#simulate) function be used instead.
+Note: The implementation for this is exhaustive, and it is not practical for scenarios missing more than about 1-2 cards worth of data. It is strongly suggested that the [`simulate`](#simulate) function be used instead.
 
 ```ts
 import { Hand, odds } from '@poker-apprentice/hand-evaluator';
@@ -193,7 +197,7 @@ console.log(result);
 
 ### Helper Functions
 
-In addition to the core functions, there are some poker game-specific functions that wrap these core functions for ease of use.  These functions are effectively the same as calling the `evaluate` of `odds` function directly with the appropriate option values prepopulated.
+In addition to the core functions, there are some poker game-specific functions that wrap these core functions for ease of use. These functions are effectively the same as calling the `evaluate` of `odds` function directly with the appropriate option values prepopulated.
 
 The functions also perform appropriate error checking/throwing to ensure that the `holeCards` and `communityCards` are of the correct length for each game.
 
@@ -248,7 +252,10 @@ Calculates the odds of winning or tying a hand of Texas Hold'em.
 
 ```ts
 import { oddsHoldem } from '@poker-apprentice/hand-evaluator';
-const allHoleCards = [['As', 'Kd'], ['Ks', '8s']];
+const allHoleCards = [
+  ['As', 'Kd'],
+  ['Ks', '8s'],
+];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsHoldem(allHoleCards, communityCards);
 ```
@@ -259,7 +266,10 @@ Calculates the odds of winning or tying a hand of Omaha.
 
 ```ts
 import { oddsOmaha } from '@poker-apprentice/hand-evaluator';
-const allHoleCards = [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']];
+const allHoleCards = [
+  ['As', 'Kd', 'Td', 'Tc'],
+  ['Ks', '8s', '9h', 'Kc'],
+];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsOmaha(allHoleCards, communityCards);
 ```
@@ -270,7 +280,10 @@ Calculates the odds of winning or tying a hand of Pineapple.
 
 ```ts
 import { oddsPineapple } from '@poker-apprentice/hand-evaluator';
-const allHoleCards = [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']];
+const allHoleCards = [
+  ['As', 'Kd', 'Td'],
+  ['Ks', '8s', 'Kc'],
+];
 const communityCards = ['Ts', 'Qs', 'Jd'];
 const result = oddsPineapple(allHoleCards, communityCards);
 ```
@@ -295,7 +308,10 @@ Estimates the odds of winning or tying a hand of Texas Hold'em.
 ```ts
 import { simulateHoldem } from '@poker-apprentice/hand-evaluator';
 const abort = simulateHoldem({
-  allHoleCards: [['As', 'Kd'], ['Ks', '8s']],
+  allHoleCards: [
+    ['As', 'Kd'],
+    ['Ks', '8s'],
+  ],
   communityCards: ['Ts', 'Qs', 'Jd'],
   callback: (result) => console.log(result),
 });
@@ -308,7 +324,10 @@ Estimates the odds of winning or tying a hand of Omaha.
 ```ts
 import { simulateOmaha } from '@poker-apprentice/hand-evaluator';
 const abort = simulateOmaha({
-  allHoleCards: [['As', 'Kd', 'Td', 'Tc'], ['Ks', '8s', '9h', 'Kc']],
+  allHoleCards: [
+    ['As', 'Kd', 'Td', 'Tc'],
+    ['Ks', '8s', '9h', 'Kc'],
+  ],
   communityCards: ['Ts', 'Qs', 'Jd'],
   callback: (result) => console.log(result),
 });
@@ -321,7 +340,10 @@ Estimates the odds of winning or tying a hand of Pineapple.
 ```ts
 import { simulatePineapple } from '@poker-apprentice/hand-evaluator';
 const abort = simulatePineapple({
-  allHoleCards: [['As', 'Kd', 'Td'], ['Ks', '8s', 'Kc']],
+  allHoleCards: [
+    ['As', 'Kd', 'Td'],
+    ['Ks', '8s', 'Kc'],
+  ],
   communityCards: ['Ts', 'Qs', 'Jd'],
   callback: (result) => console.log(result),
 });
@@ -344,7 +366,7 @@ const abort = simulateStud({
 
 ## Development
 
-Contributions are welcome.  Please create an issue in the project first to discuss any possible enhancements, bugs, or other changes prior to submitting a pull request.  Alternatively, browse existing issues if interested in providing a fix.
+Contributions are welcome. Please create an issue in the project first to discuss any possible enhancements, bugs, or other changes prior to submitting a pull request. Alternatively, browse existing issues if interested in providing a fix.
 
 ### Environment Setup
 
@@ -377,7 +399,7 @@ yarn test:profile compare.test.ts   # matches test file name
 yarn test:profile -t "compare"      # matches test name/description
 ```
 
-This will create one `.cpuprofile` file per test under the `profiles/` folder.  To open these files in Google Chrome:
+This will create one `.cpuprofile` file per test under the `profiles/` folder. To open these files in Google Chrome:
 
 1. Navigate to [chrome://inspect].
 2. Click "Open dedicated DevTools for Node".

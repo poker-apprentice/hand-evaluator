@@ -21,7 +21,9 @@ describe('evaluateOmaha', () => {
     const holeCards: Card[] = ['As', 'Kd', 'Ts', 'Tc', '2h'];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => evaluateOmaha({ holeCards, communityCards })).toThrow('holeCards accepts a maximum of 4 elements');
+    expect(() => evaluateOmaha({ holeCards, communityCards })).toThrow(
+      'holeCards accepts a maximum of 4 elements',
+    );
   });
 
   it('throws if too many community cards are provided', () => {

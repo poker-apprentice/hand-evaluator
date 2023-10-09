@@ -72,7 +72,9 @@ describe('odds', () => {
         ['Ad', 'Ac'],
       ];
 
-      expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h', 'Th', '2s'] })).toEqual([
+      expect(
+        odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h', 'Th', '2s'] }),
+      ).toEqual([
         { wins: 1, ties: 0, total: 1 },
         { wins: 0, ties: 0, total: 1 },
       ]);

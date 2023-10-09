@@ -8,12 +8,16 @@ describe('handComparator', () => {
 
   it('returns -1 when the first hand ranks are higher value', () => {
     expect(handComparator(['Ac'], ['Kc'])).toEqual(-1);
-    expect(handComparator(['Ac', 'Ad', 'Kd', 'Th', '2c'], ['Ac', 'Ad', 'Qd', 'Th', '2c'])).toEqual(-1);
+    expect(handComparator(['Ac', 'Ad', 'Kd', 'Th', '2c'], ['Ac', 'Ad', 'Qd', 'Th', '2c'])).toEqual(
+      -1,
+    );
   });
 
   it('returns 1 when the second hand ranks is higher value', () => {
     expect(handComparator(['Kc'], ['Ac'])).toEqual(1);
-    expect(handComparator(['Ac', 'Ad', 'Qd', 'Th', '2c'], ['Ac', 'Ad', 'Kd', 'Th', '2c'])).toEqual(1);
+    expect(handComparator(['Ac', 'Ad', 'Qd', 'Th', '2c'], ['Ac', 'Ad', 'Kd', 'Th', '2c'])).toEqual(
+      1,
+    );
   });
 
   describe('uneven card counts', () => {

@@ -15,8 +15,14 @@ export const getRemainingCardCount = ({
 }: Options) => {
   const remainingHoleCardCount = Math.max(
     0,
-    allHoleCards.reduce((count, holeCards) => count + (expectedHoleCardCount - holeCards.length), 0),
+    allHoleCards.reduce(
+      (count, holeCards) => count + (expectedHoleCardCount - holeCards.length),
+      0,
+    ),
   );
-  const remainingCommunityCardCount = Math.max(0, expectedCommunityCardCount - communityCards.length);
+  const remainingCommunityCardCount = Math.max(
+    0,
+    expectedCommunityCardCount - communityCards.length,
+  );
   return remainingHoleCardCount + remainingCommunityCardCount;
 };

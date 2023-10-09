@@ -20,7 +20,9 @@ export const buildScenario = ({
   };
   selectedCards.forEach((card) => {
     // Determine which set of hole cards or community cards to place the current card.
-    const placementIndex = scenario.allHoleCards.findIndex((hand) => hand.length < expectedHoleCardCount);
+    const placementIndex = scenario.allHoleCards.findIndex(
+      (hand) => hand.length < expectedHoleCardCount,
+    );
 
     if (placementIndex === -1) {
       scenario.communityCards.push(card);

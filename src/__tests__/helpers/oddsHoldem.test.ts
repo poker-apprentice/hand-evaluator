@@ -40,6 +40,8 @@ describe('oddsHoldem', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
-    expect(() => oddsHoldem(allHoleCards, communityCards)).toThrow('communityCards accepts a maximum of 5 elements');
+    expect(() => oddsHoldem(allHoleCards, communityCards)).toThrow(
+      'communityCards accepts a maximum of 5 elements',
+    );
   });
 });

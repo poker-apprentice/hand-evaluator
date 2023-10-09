@@ -1,14 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "module": "commonjs",
-    "declaration": true,
-    "outDir": "./dist",
+    "target": "es6",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    "skipLibCheck": true,
     "esModuleInterop": true,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "./src",
+    "outDir": "./dist/types",
+    "paths": { "~/*": ["./src/*"] }
   },
-  "include": ["src"],
-  "exclude": ["src/__tests__"]
+  "include": ["./src/**/*"],
+  "exclude": ["./dist", "./node_modules"]
 }

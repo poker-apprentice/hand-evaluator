@@ -2,7 +2,10 @@ import { simulate, SimulateOptions } from '../simulate';
 
 type Options = Omit<
   SimulateOptions,
-  'expectedCommunityCardCount' | 'expectedHoleCardCount' | 'minimumHoleCardsUsed' | 'maximumHoleCardsUsed'
+  | 'expectedCommunityCardCount'
+  | 'expectedHoleCardCount'
+  | 'minimumHoleCardsUsed'
+  | 'maximumHoleCardsUsed'
 >;
 
 export const simulateHoldem = (options: Options) => {

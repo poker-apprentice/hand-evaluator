@@ -21,7 +21,9 @@ describe('evaluatePineapple', () => {
     const holeCards: Card[] = ['As', 'Kd', 'Ts', 'Tc'];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => evaluatePineapple({ holeCards, communityCards })).toThrow('holeCards accepts a maximum of 3 elements');
+    expect(() => evaluatePineapple({ holeCards, communityCards })).toThrow(
+      'holeCards accepts a maximum of 3 elements',
+    );
   });
 
   it('throws if too many community cards are provided', () => {

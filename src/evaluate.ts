@@ -18,14 +18,16 @@ const HAND_SIZE = 5;
 
 const uniq = <T>(items: T[]) => Array.from(new Set(items));
 
-const max = <T>(items: T[]) => items.reduce((accum, current) => (current > accum ? current : accum));
+const max = <T>(items: T[]) =>
+  items.reduce((accum, current) => (current > accum ? current : accum));
 
 const getStraights = (cards: Card[]): Card[][] => {
   const straights: Card[][] = [];
 
   // allow ace to be treated as high or low
   const lastAceIndex = cards.findLastIndex((card) => getRank(card) === 'A');
-  const adjustedCards = lastAceIndex === -1 ? cards : [...cards, ...cards.slice(0, lastAceIndex + 1)];
+  const adjustedCards =
+    lastAceIndex === -1 ? cards : [...cards, ...cards.slice(0, lastAceIndex + 1)];
 
   for (let i = 0; i < adjustedCards.length - HAND_SIZE + 1; i += 1) {
     const currentHands: Card[][] = [[adjustedCards[i]]];
@@ -45,7 +47,10 @@ const getStraights = (cards: Card[]): Card[][] => {
           // If the current card is one rank lower than the last card, then append it
           // to all possible hands.
           currentHands.forEach((currentHand) => currentHand.push(card));
-        } else if (rankOrder.indexOf(rank) === rankOrder.length - 1 && rankOrder.indexOf(lastRank) === 0) {
+        } else if (
+          rankOrder.indexOf(rank) === rankOrder.length - 1 &&
+          rankOrder.indexOf(lastRank) === 0
+        ) {
           // If the current card is an ace, and the last card was a deuce, then append it
           // to all possible hands.
           currentHands.forEach((currentHand) => currentHand.push(card));
@@ -81,7 +86,10 @@ const getDuplicates = (cards: Card[]): Record<Rank, Card[]> => {
   return duplicates;
 };
 
-const getOfAKinds = (cardGroups: Record<Rank, Card[]> | Record<Suit, Card[]>, count: number): Card[][] =>
+const getOfAKinds = (
+  cardGroups: Record<Rank, Card[]> | Record<Suit, Card[]>,
+  count: number,
+): Card[][] =>
   Object.values(cardGroups)
     .filter((cards) => cards.length === count)
     .sort(handComparator);
@@ -115,7 +123,9 @@ const getAllHandCombinations = ({
   const sameMinMax = minimumHoleCards === maximumHoleCards;
   const allHoleCardCombinations = new Array(sameMinMax ? 1 : maximumHoleCards - minimumHoleCards)
     .fill(undefined)
-    .flatMap((i, index) => getCombinations(holeCards, index + minimumHoleCards + (sameMinMax ? 0 : 1)));
+    .flatMap((i, index) =>
+      getCombinations(holeCards, index + minimumHoleCards + (sameMinMax ? 0 : 1)),
+    );
 
   const remainingCardCounts = uniq(
     allHoleCardCombinations.map((currentHoleCards) => {
@@ -136,7 +146,10 @@ const getAllHandCombinations = ({
     if (allCommunityCards.length === 0) {
       return [currentHoleCards];
     }
-    return allCommunityCards.map((currentCommunityCards) => [...currentHoleCards, ...currentCommunityCards]);
+    return allCommunityCards.map((currentCommunityCards) => [
+      ...currentHoleCards,
+      ...currentCommunityCards,
+    ]);
   });
 
   // only include combinations that are the longest, as shorter combinations will
@@ -153,7 +166,8 @@ const evaluateHand = (unsortedCards: Card[]) => {
   // straight flush/royal flush
   const straightFlushes = straights.filter((straight) => uniq(straight.map(getSuit)).length === 1);
   if (straightFlushes.length > 0) {
-    const strength = getRank(straightFlushes[0][0]) === 'A' ? Strength.ROYAL_FLUSH : Strength.STRAIGHT_FLUSH;
+    const strength =
+      getRank(straightFlushes[0][0]) === 'A' ? Strength.ROYAL_FLUSH : Strength.STRAIGHT_FLUSH;
     return { strength, hand: straightFlushes[0] };
   }
 
@@ -210,9 +224,17 @@ const evaluateHand = (unsortedCards: Card[]) => {
   return { strength: Strength.HIGH_CARD, hand: getKickers([], cards) };
 };
 
-export const evaluate = ({ holeCards, communityCards = [], ...options }: EvaluateOptions): EvaluatedHand => {
+export const evaluate = ({
+  holeCards,
+  communityCards = [],
+  ...options
+}: EvaluateOptions): EvaluatedHand => {
   const minimumHoleCards = Math.max(0, options.minimumHoleCards ?? 0);
-  const maximumHoleCards = Math.min(holeCards.length, options.maximumHoleCards ?? holeCards.length, HAND_SIZE);
+  const maximumHoleCards = Math.min(
+    holeCards.length,
+    options.maximumHoleCards ?? holeCards.length,
+    HAND_SIZE,
+  );
 
   if (holeCards.length === 0 && communityCards.length === 0) {
     throw new Error('Must supply at least one holeCard or communityCard');

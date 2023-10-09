@@ -1,7 +1,5 @@
-import { odds, OddsOptions } from '../odds';
+import { odds } from '../odds';
 import { Hand } from '../types';
-
-type Options = Omit<OddsOptions, 'minimumHoleCardsUsed' | 'maximumHoleCardsUsed' | 'communityCards'>;
 
 export const oddsStud = (allHoleCards: Hand[]) => {
   if (allHoleCards.some((holeCards) => holeCards.length > 7)) {
