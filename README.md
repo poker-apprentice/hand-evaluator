@@ -9,6 +9,7 @@ A collection of useful functions for determining the strongest possible hand giv
 The following types are defined & utilized by this package.
 
 - `EvaluatedHand`: An object representing the effective hand & strength, given a coordination of cards.
+- `Odds`: An object representing how a hand will perform given a scenario.  Includes the number of `wins`, `ties`, and `total` possible outcomes.
 - `Strength`: An enumeration of hand strengths.
   - `Strength.ROYAL_FLUSH`
   - `Strength.STRAIGHT_FLUSH`
