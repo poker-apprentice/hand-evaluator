@@ -1,5 +1,5 @@
+import { Hand } from '@poker-apprentice/types';
 import { odds } from '../odds';
-import { Hand } from '../types';
 
 describe('odds', () => {
   describe('game has community cards', () => {
