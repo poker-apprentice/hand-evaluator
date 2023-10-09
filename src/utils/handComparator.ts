@@ -1,4 +1,4 @@
-import { Card } from '../types';
+import { Card } from '@poker-apprentice/types';
 import { cardComparator } from './cardComparator';
 
 export const handComparator = (a: Card[], b: Card[]) => {

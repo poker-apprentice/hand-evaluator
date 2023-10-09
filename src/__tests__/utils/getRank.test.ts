@@ -1,4 +1,4 @@
-import { getRank } from '../../utils/getRank';
+import { getRank } from '@poker-apprentice/types';
 
 describe('getRank', () => {
   it('returns the first character', () => {

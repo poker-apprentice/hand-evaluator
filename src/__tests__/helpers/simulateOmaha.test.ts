@@ -1,6 +1,6 @@
+import { Card, Hand } from '@poker-apprentice/types';
 import * as simulateModule from '../../simulate';
 import { simulateOmaha } from '../../helpers/simulateOmaha';
-import { Card, Hand } from '../../types';
 
 describe('simulateOmaha', () => {
   const callback = () => {};

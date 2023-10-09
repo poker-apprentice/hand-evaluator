@@ -1,10 +1,9 @@
+import { Card, Rank, Suit, getRank, getSuit } from '@poker-apprentice/types';
 import { compare } from './compare';
 import { rankOrder } from './constants';
-import { Card, EvaluatedHand, Rank, Strength, Suit } from './types';
+import { EvaluatedHand, Strength } from './types';
 import { cardComparator } from './utils/cardComparator';
 import { getCombinations } from './utils/getCombinations';
-import { getRank } from './utils/getRank';
-import { getSuit } from './utils/getSuit';
 import { handComparator } from './utils/handComparator';
 
 export interface EvaluateOptions {

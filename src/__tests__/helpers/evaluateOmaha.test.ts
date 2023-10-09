@@ -1,6 +1,6 @@
+import { Card } from '@poker-apprentice/types';
 import * as evaluateModel from '../../evaluate';
 import { evaluateOmaha } from '../../helpers/evaluateOmaha';
-import { Card } from '../../types';
 
 describe('evaluateOmaha', () => {
   it('delegates to `evaluate`', () => {

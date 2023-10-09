@@ -1,4 +1,4 @@
-import { Card, Hand } from '../types';
+import { Card, Hand } from '@poker-apprentice/types';
 
 interface Options {
   allHoleCards: Hand[];

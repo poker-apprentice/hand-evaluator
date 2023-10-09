@@ -1,5 +1,5 @@
+import { Card, Hand } from '@poker-apprentice/types';
 import { odds } from '../odds';
-import { Card, Hand } from '../types';
 
 export const oddsHoldem = (allHoleCards: Hand[], communityCards: Card[]) => {
   if (allHoleCards.some((holeCards) => holeCards.length > 2)) {

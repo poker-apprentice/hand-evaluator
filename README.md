@@ -6,12 +6,8 @@ A collection of useful functions for determining the strongest possible hand giv
 
 ### Types
 
-The following is a list of significant type definitions defined & utilized by this package.
+The following types are defined & utilized by this package.
 
-- `Card`: A 2-character string representing the rank & suit of a card. (e.g.: "2s" for the 10 of spades).
-  - Ranks: 2, 3, 4, 5, 6, 7, 8, 9, T, J, Q, K, A
-  - Suits: c, d, h, s
-- `Hand`: An array of cards.
 - `EvaluatedHand`: An object representing the effective hand & strength, given a coordination of cards.
 - `Strength`: An enumeration of hand strengths.
   - `Strength.ROYAL_FLUSH`

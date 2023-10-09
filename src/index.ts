@@ -1,4 +1,4 @@
-export type { Card, Hand, Odds, Strength } from './types';
+export type { Odds, Strength } from './types';
 
 export { compare } from './compare';
 export { evaluate } from './evaluate';

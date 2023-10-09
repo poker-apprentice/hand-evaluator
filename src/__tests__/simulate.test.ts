@@ -1,5 +1,5 @@
+import { Card, Hand } from '@poker-apprentice/types';
 import { simulate } from '../simulate';
-import { Card, Hand } from '../types';
 
 describe('simulate', () => {
   const allHoleCards: Hand[] = [

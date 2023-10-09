@@ -1,4 +1,4 @@
-import { getSuit } from '../../utils/getSuit';
+import { getSuit } from '@poker-apprentice/types';
 
 describe('getRank', () => {
   it('returns the second character', () => {

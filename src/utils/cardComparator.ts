@@ -1,6 +1,5 @@
+import { Card, getRank } from '@poker-apprentice/types';
 import { rankOrder } from '../constants';
-import { Card } from '../types';
-import { getRank } from './getRank';
 
 export const cardComparator = (a: Card, b: Card) => {
   const rankA = getRank(a);

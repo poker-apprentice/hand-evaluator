@@ -1508,6 +1508,11 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
+"@poker-apprentice/types@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@poker-apprentice/types/-/types-1.1.1.tgz#02a2fd7e080fcf310dc8dab2c3bd6cab9fe8a208"
+  integrity sha512-0cU4Ws7ug62PE0VzefN9AkUavTm1opdEqGzLnD2cDRzUIZbtEljF2kpewvJ9vK2aUjUNIvpWI862hkviO5CgOg==
+
 "@rollup/plugin-babel@^6.0.3":
   version "6.0.4"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-babel/-/plugin-babel-6.0.4.tgz#bd698e351fa9aa9619fcae780aea2a603d98e4c4"

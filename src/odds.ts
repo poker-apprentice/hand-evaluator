@@ -1,4 +1,5 @@
-import { Card, Hand, Odds, Scenario } from './types';
+import { Card, Hand } from '@poker-apprentice/types';
+import { Odds, Scenario } from './types';
 import { buildScenario } from './utils/buildScenario';
 import { evaluateScenario } from './utils/evaluateScenario';
 import { getCombinations } from './utils/getCombinations';
