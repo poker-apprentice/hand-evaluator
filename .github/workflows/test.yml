@@ -2,9 +2,9 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ $default-branch, github-actions ]
+    branches: [$default-branch, github-actions]
   pull_request:
-    branches: [ $default-branch ]
+    branches: [$default-branch]
 
 jobs:
   build:
@@ -13,14 +13,14 @@ jobs:
       matrix:
         node-version: [16.x, 18.x, 20.x]
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
-    - run: yarn install --frozen-lockfile
-    - run: yarn run lint
-    - run: yarn run format
-    - run: yarn run test
-    - run: yarn run build
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - run: yarn install --frozen-lockfile
+      - run: yarn run lint
+      - run: yarn run format
+      - run: yarn run test
+      - run: yarn run build
