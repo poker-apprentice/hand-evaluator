@@ -74,10 +74,9 @@ const getDuplicates = (cards: Card[]): Map<Rank, Card[]> => {
   return duplicates;
 };
 
-const getOfAKinds = (cardGroups: Map<Rank, Card[]>, count: number): Card[][] => {
-  return [...cardGroups.values()]
-    .filter((cards) => cards.length === count)
-    .sort((a, b) => cardComparator(a[0], b[0]));
+const getCardsOfLength = <T>(cardGroups: Map<T, Card[]>, count: number): Card[][] => {
+  const values = [...cardGroups.values()];
+  return values.filter((cards) => cards.length === count).sort(handComparator);
 };
 
 const getFlushes = (cards: Card[]): Card[][] => {
@@ -95,7 +94,7 @@ const getFlushes = (cards: Card[]): Card[][] => {
   });
 
   // only return flushes made up of a legitimate hand size
-  return [...suitedCards.values()].filter((hand) => hand.length === HAND_SIZE).sort(handComparator);
+  return getCardsOfLength(suitedCards, HAND_SIZE);
 };
 
 const getKickers = (hand: Card[], allCards: Card[]) => {
@@ -177,10 +176,10 @@ const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
     return { strength, hand: straightFlushes[0] };
   }
 
-  const duplicates = getDuplicates(cards);
+  const duplicates: Map<Rank, Card[]> = getDuplicates(cards);
 
   // four of a kind
-  const allQuads = getOfAKinds(duplicates, 4);
+  const allQuads = getCardsOfLength(duplicates, 4);
   if (allQuads.length > 0) {
     const quads = allQuads[0];
     const kickers = getKickers(quads, cards);
@@ -188,8 +187,8 @@ const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
   }
 
   // full house
-  const allTrips = getOfAKinds(duplicates, 3);
-  const allPairs = getOfAKinds(duplicates, 2);
+  const allTrips = getCardsOfLength(duplicates, 3);
+  const allPairs = getCardsOfLength(duplicates, 2);
   if (allTrips.length > 0 && allPairs.length > 0) {
     return { strength: Strength.FULL_HOUSE, hand: [...allTrips[0], ...allPairs[0]] };
   }
