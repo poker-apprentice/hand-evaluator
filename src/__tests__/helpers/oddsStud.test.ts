@@ -1,6 +1,6 @@
+import { Hand } from '@poker-apprentice/types';
 import * as oddsModule from '../../odds';
 import { oddsStud } from '../../helpers/oddsStud';
-import { Hand } from '../../types';
 
 describe('oddsStud', () => {
   it('delegates to `odds`', () => {
