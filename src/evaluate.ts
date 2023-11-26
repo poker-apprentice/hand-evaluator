@@ -63,49 +63,38 @@ const getStraights = (cards: Card[]): Card[][] => {
   return straights.sort(handComparator);
 };
 
-const getDuplicates = (cards: Card[]): Record<Rank, Card[]> => {
-  const duplicates: Record<Rank, Card[]> = {
-    2: [],
-    3: [],
-    4: [],
-    5: [],
-    6: [],
-    7: [],
-    8: [],
-    9: [],
-    T: [],
-    J: [],
-    Q: [],
-    K: [],
-    A: [],
-  };
+const getDuplicates = (cards: Card[]): Map<Rank, Card[]> => {
+  const duplicates: Map<Rank, Card[]> = new Map();
   cards.forEach((card) => {
-    duplicates[getRank(card)].push(card);
+    const rank = getRank(card);
+    const current = duplicates.get(rank) ?? [];
+    current.push(card);
+    duplicates.set(rank, current);
   });
   return duplicates;
 };
 
-const getOfAKinds = (
-  cardGroups: Record<Rank, Card[]> | Record<Suit, Card[]>,
-  count: number,
-): Card[][] =>
-  Object.values(cardGroups)
-    .filter((cards) => cards.length === count)
-    .sort(handComparator);
+const getCardsOfLength = <T>(cardGroups: Map<T, Card[]>, count: number): Card[][] => {
+  const values = [...cardGroups.values()];
+  return values.filter((cards) => cards.length === count).sort(handComparator);
+};
 
 const getFlushes = (cards: Card[]): Card[][] => {
-  const suitedCards: Record<Suit, Card[]> = { c: [], d: [], h: [], s: [] };
+  const suitedCards: Map<Suit, Card[]> = new Map();
   cards.forEach((card) => {
-    suitedCards[getSuit(card)].push(card);
+    const suit = getSuit(card);
+    const current = suitedCards.get(suit) ?? [];
+    current.push(card);
+    suitedCards.set(suit, current);
   });
 
   // only use the first 5 cards of the same suit to make up a hand
-  (Object.keys(suitedCards) as Suit[]).forEach((suit) => {
-    suitedCards[suit] = suitedCards[suit].slice(0, HAND_SIZE);
+  suitedCards.forEach((current) => {
+    current.splice(HAND_SIZE);
   });
 
   // only return flushes made up of a legitimate hand size
-  return getOfAKinds(suitedCards, HAND_SIZE);
+  return getCardsOfLength(suitedCards, HAND_SIZE);
 };
 
 const getKickers = (hand: Card[], allCards: Card[]) => {
@@ -119,6 +108,23 @@ const getAllHandCombinations = ({
   minimumHoleCards,
   maximumHoleCards,
 }: Required<EvaluateOptions>): Card[][] => {
+  // when minimum <= 0 AND maximum >= holeCards.length, we can just combine
+  // holeCards & communityCards
+  if (minimumHoleCards <= 0 && maximumHoleCards >= holeCards.length) {
+    return [[...holeCards, ...communityCards]];
+  }
+
+  // when minimum <= 0, we can get all combinations of holeCards of length (maximum), then
+  // combine each of those combinations w/ communityCards
+  if (minimumHoleCards <= 0) {
+    return getCombinations(holeCards, maximumHoleCards).map((cards) => [
+      ...cards,
+      ...communityCards,
+    ]);
+  }
+
+  // otherwise, we need to find all combinations possible by combining exact combinations of
+  // N holeCards + M communityCards, where N=minimum and M=HAND_SIZE-minimum.
   const sameMinMax = minimumHoleCards === maximumHoleCards;
   const allHoleCardCombinations = new Array(sameMinMax ? 1 : maximumHoleCards - minimumHoleCards)
     .fill(undefined)
@@ -158,7 +164,7 @@ const getAllHandCombinations = ({
   return allHandCombinations.filter((cards) => cards.length === longestCombination);
 };
 
-const evaluateHand = (unsortedCards: Card[]) => {
+const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
   const cards = unsortedCards.sort(cardComparator);
   const straights = getStraights(cards);
 
@@ -170,10 +176,10 @@ const evaluateHand = (unsortedCards: Card[]) => {
     return { strength, hand: straightFlushes[0] };
   }
 
-  const duplicates = getDuplicates(cards);
+  const duplicates: Map<Rank, Card[]> = getDuplicates(cards);
 
   // four of a kind
-  const allQuads = getOfAKinds(duplicates, 4);
+  const allQuads = getCardsOfLength(duplicates, 4);
   if (allQuads.length > 0) {
     const quads = allQuads[0];
     const kickers = getKickers(quads, cards);
@@ -181,8 +187,8 @@ const evaluateHand = (unsortedCards: Card[]) => {
   }
 
   // full house
-  const allTrips = getOfAKinds(duplicates, 3);
-  const allPairs = getOfAKinds(duplicates, 2);
+  const allTrips = getCardsOfLength(duplicates, 3);
+  const allPairs = getCardsOfLength(duplicates, 2);
   if (allTrips.length > 0 && allPairs.length > 0) {
     return { strength: Strength.FULL_HOUSE, hand: [...allTrips[0], ...allPairs[0]] };
   }

@@ -17,8 +17,8 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8d'] })).toEqual([
-        { wins: 149, ties: 0, total: 990 },
-        { wins: 841, ties: 0, total: 990 },
+        { wins: 304, ties: 0, total: 1980 },
+        { wins: 1676, ties: 0, total: 1980 },
       ]);
     });
 
@@ -29,8 +29,8 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 45, ties: 900, total: 990 },
-        { wins: 45, ties: 900, total: 990 },
+        { wins: 90, ties: 1800, total: 1980 },
+        { wins: 90, ties: 1800, total: 1980 },
       ]);
     });
 
@@ -42,9 +42,9 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 29, ties: 114, total: 903 },
-        { wins: 28, ties: 114, total: 903 },
-        { wins: 732, ties: 0, total: 903 },
+        { wins: 58, ties: 234, total: 1806 },
+        { wins: 56, ties: 234, total: 1806 },
+        { wins: 1458, ties: 0, total: 1806 },
       ]);
     });
 
@@ -52,17 +52,8 @@ describe('odds', () => {
       const hands: Hand[] = [['As', 'Ks'], ['Ad']];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 12694, ties: 1109, total: 15180 },
-        { wins: 1377, ties: 1109, total: 15180 },
-      ]);
-    });
-
-    it('heads-up, not all hole cards provided', () => {
-      const hands: Hand[] = [['As', 'Ks'], ['Ad']];
-
-      expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 12694, ties: 1109, total: 15180 },
-        { wins: 1377, ties: 1109, total: 15180 },
+        { wins: 59072, ties: 8272, total: 91080 },
+        { wins: 23736, ties: 8272, total: 91080 },
       ]);
     });
 
@@ -92,13 +83,13 @@ describe('odds', () => {
 
     it('heads-up (no ties)', () => {
       const hands: Hand[] = [
-        ['As', 'Kd', 'Ks', '8s', 'Ac'],
-        ['9s', '8s', 'Ts', '6s', '4h'],
+        ['As', 'Kd', 'Ks', '8c', 'Ac', '2d'],
+        ['9s', '8s', 'Ts', '6s', '4h', '2c'],
       ];
 
       expect(odds(hands, studOptions)).toEqual([
-        { wins: 73732, ties: 0, total: 123410 },
-        { wins: 49678, ties: 0, total: 123410 },
+        { wins: 1206, ties: 0, total: 1560 },
+        { wins: 354, ties: 0, total: 1560 },
       ]);
     });
   });

@@ -12,7 +12,7 @@ export const getCombinations = <T>(sourceArray: T[], comboLength: number) => {
     const oneAwayFromComboLength = remainingCount === 1;
 
     // For each element that remaines to be added to the working combination.
-    for (let sourceIndex = currentIndex; sourceIndex < sourceLength; sourceIndex++) {
+    for (let sourceIndex = currentIndex; sourceIndex < sourceLength; sourceIndex += 1) {
       // Get next (possibly partial) combination.
       workingCombo.push(sourceArray[sourceIndex]);
 

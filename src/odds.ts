@@ -2,7 +2,7 @@ import { Card, Hand } from '@poker-apprentice/types';
 import { Odds, Scenario } from './types';
 import { buildScenario } from './utils/buildScenario';
 import { evaluateScenario } from './utils/evaluateScenario';
-import { getCombinations } from './utils/getCombinations';
+import { getPermutations } from './utils/getPermutations';
 import { getRemainingCardCount } from './utils/getRemainingCardCount';
 import { getRemainingCards } from './utils/getRemainingCards';
 
@@ -35,15 +35,17 @@ const getAllScenarios = ({
     expectedHoleCardCount,
   });
 
-  // Get all combinations of remaining cards that can be used.
-  const remainingCardCombinations = getCombinations(remainingCards, remainingCardCount);
+  // Get all permutations of remaining cards that can be used.  We want permutations rather than
+  // combinations because the results are different when a card ends up being treated as a hole
+  // card vs. community card.
+  const remainingCardPermutations = getPermutations(remainingCards, remainingCardCount);
 
-  if (remainingCardCombinations.length === 0) {
+  if (remainingCardPermutations.length === 0) {
     return [{ allHoleCards, communityCards }];
   }
 
   // Generate all possible hole card + community card scenarios based upon the remaining cards.
-  return remainingCardCombinations.reduce((scenarios: Scenario[], cards) => {
+  return remainingCardPermutations.reduce((scenarios: Scenario[], cards) => {
     scenarios.push(
       buildScenario({
         allHoleCards,

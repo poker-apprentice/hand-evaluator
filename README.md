@@ -187,8 +187,8 @@ const result = odds([hand1, hand2], {
 
 console.log(result);
 // => [
-//      { wins: 149, ties: 0, total: 990 },
-//      { wins: 841, ties: 0, total: 990 },
+//      { wins: 304, ties: 0, total: 1980 },
+//      { wins: 1676, ties: 0, total: 1980 },
 //    ]
 ```
 
