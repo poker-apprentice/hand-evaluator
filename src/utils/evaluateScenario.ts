@@ -1,10 +1,16 @@
+import { Card, Hand } from '@poker-apprentice/types';
 import { compare } from '../compare';
 import { evaluate } from '../evaluate';
-import { Odds, Scenario } from '../types';
+import { Odds } from '../types';
 
 interface Options {
   minimumHoleCardsUsed: number;
   maximumHoleCardsUsed: number;
+}
+
+export interface Scenario {
+  allHoleCards: Hand[];
+  communityCards: Card[];
 }
 
 export const evaluateScenario = (

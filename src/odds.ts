@@ -1,7 +1,7 @@
 import { Card, Hand } from '@poker-apprentice/types';
-import { Odds, Scenario } from './types';
+import { Odds } from './types';
 import { buildScenario } from './utils/buildScenario';
-import { evaluateScenario } from './utils/evaluateScenario';
+import { Scenario, evaluateScenario } from './utils/evaluateScenario';
 import { getPermutations } from './utils/getPermutations';
 import { getRemainingCardCount } from './utils/getRemainingCardCount';
 import { getRemainingCards } from './utils/getRemainingCards';

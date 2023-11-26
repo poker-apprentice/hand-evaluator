@@ -1,6 +1,6 @@
 import { Card, Hand } from '@poker-apprentice/types';
 import { cloneDeep } from 'lodash';
-import { Scenario } from '../types';
+import { Scenario } from './evaluateScenario';
 
 interface BuildScenarioOptions {
   allHoleCards: Hand[];

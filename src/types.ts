@@ -1,4 +1,4 @@
-import { Card, Hand } from '@poker-apprentice/types';
+import { Hand } from '@poker-apprentice/types';
 
 export enum Strength {
   ROYAL_FLUSH = 1,
@@ -16,11 +16,6 @@ export enum Strength {
 export interface EvaluatedHand {
   strength: Strength;
   hand: Hand;
-}
-
-export interface Scenario {
-  allHoleCards: Hand[];
-  communityCards: Card[];
 }
 
 export interface Odds {
