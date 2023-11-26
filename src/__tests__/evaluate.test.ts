@@ -112,4 +112,28 @@ describe('evaluate', () => {
       });
     });
   });
+
+  it('allows fewer cards than 5 total cards', () => {
+    expect(
+      evaluate({
+        holeCards: ['Jc', 'Kh'],
+        minimumHoleCards: 2,
+        maximumHoleCards: 2,
+      }),
+    ).toEqual({
+      strength: Strength.HIGH_CARD,
+      hand: ['Kh', 'Jc'],
+    });
+
+    expect(
+      evaluate({
+        holeCards: ['As', 'Ad'],
+        minimumHoleCards: 2,
+        maximumHoleCards: 2,
+      }),
+    ).toEqual({
+      strength: Strength.ONE_PAIR,
+      hand: ['As', 'Ad'],
+    });
+  });
 });
