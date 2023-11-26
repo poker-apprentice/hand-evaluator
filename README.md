@@ -10,17 +10,6 @@ The following types are defined & utilized by this package.
 
 - `EvaluatedHand`: An object representing the effective hand & strength, given a coordination of cards.
 - `Odds`: An object representing how a hand will perform given a scenario. Includes the number of `wins`, `ties`, and `total` possible outcomes.
-- `Strength`: An enumeration of hand strengths.
-  - `Strength.ROYAL_FLUSH`
-  - `Strength.STRAIGHT_FLUSH`
-  - `Strength.FOUR_OF_A_KIND`
-  - `Strength.FULL_HOUSE`
-  - `Strength.FLUSH`
-  - `Strength.STRAIGHT`
-  - `Strength.THREE_OF_A_KIND`
-  - `Strength.TWO_PAIR`
-  - `Strength.ONE_PAIR`
-  - `Strength.HIGH_CARD`
 
 ### Core Functions
 
@@ -29,7 +18,8 @@ The following types are defined & utilized by this package.
 Given a list of hole cards and (optionally) community cards, determine the best possible poker hand and the strength of that hand.
 
 ```ts
-import { evaluate, Strength } from '@poker-apprentice/hand-evaluator';
+import { evaluate } from '@poker-apprentice/hand-evaluator';
+import { HandStrength } from '@poker-apprentice/types';
 
 const result = evaluate({
   holeCards: ['As', 'Qd'],
@@ -39,7 +29,7 @@ const result = evaluate({
 console.log(result);
 // => { hand: ['As', 'Kc', 'Qd', 'Js', 'Td'], strength: 6 };
 
-console.log(result.strength === Strength.STRAIGHT);
+console.log(result.strength === HandStrength.Straight);
 // => true
 ```
 

@@ -5,5 +5,5 @@ export const compare = (a: EvaluatedHand, b: EvaluatedHand) => {
   if (a.strength === b.strength) {
     return handComparator(a.hand, b.hand);
   }
-  return a.strength < b.strength ? -1 : 1;
+  return a.strength < b.strength ? 1 : -1;
 };

@@ -1,7 +1,7 @@
-import { Card, Rank, Suit, getRank, getSuit } from '@poker-apprentice/types';
+import { Card, HandStrength, Rank, Suit, getRank, getSuit } from '@poker-apprentice/types';
 import { compare } from './compare';
 import { rankOrder } from './constants';
-import { EvaluatedHand, Strength } from './types';
+import { EvaluatedHand } from './types';
 import { cardComparator } from './utils/cardComparator';
 import { getCombinations } from './utils/getCombinations';
 import { handComparator } from './utils/handComparator';
@@ -172,7 +172,7 @@ const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
   const straightFlushes = straights.filter((straight) => uniq(straight.map(getSuit)).length === 1);
   if (straightFlushes.length > 0) {
     const strength =
-      getRank(straightFlushes[0][0]) === 'A' ? Strength.ROYAL_FLUSH : Strength.STRAIGHT_FLUSH;
+      getRank(straightFlushes[0][0]) === 'A' ? HandStrength.RoyalFlush : HandStrength.StraightFlush;
     return { strength, hand: straightFlushes[0] };
   }
 
@@ -183,50 +183,50 @@ const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
   if (allQuads.length > 0) {
     const quads = allQuads[0];
     const kickers = getKickers(quads, cards);
-    return { strength: Strength.FOUR_OF_A_KIND, hand: [...quads, ...kickers] };
+    return { strength: HandStrength.FourOfAKind, hand: [...quads, ...kickers] };
   }
 
   // full house
   const allTrips = getCardsOfLength(duplicates, 3);
   const allPairs = getCardsOfLength(duplicates, 2);
   if (allTrips.length > 0 && allPairs.length > 0) {
-    return { strength: Strength.FULL_HOUSE, hand: [...allTrips[0], ...allPairs[0]] };
+    return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allPairs[0]] };
   }
 
   // flush
   const flushes = getFlushes(cards);
   if (flushes.length > 0) {
-    return { strength: Strength.FLUSH, hand: flushes[0] };
+    return { strength: HandStrength.Flush, hand: flushes[0] };
   }
 
   // straight
   if (straights.length > 0) {
-    return { strength: Strength.STRAIGHT, hand: straights[0] };
+    return { strength: HandStrength.Straight, hand: straights[0] };
   }
 
   // three of a kind
   if (allTrips.length > 0) {
     const trips = allTrips[0];
     const kickers = getKickers(trips, cards);
-    return { strength: Strength.THREE_OF_A_KIND, hand: [...trips, ...kickers] };
+    return { strength: HandStrength.ThreeOfAKind, hand: [...trips, ...kickers] };
   }
 
   // two pair
   if (allPairs.length >= 2) {
     const twoPair = [...allPairs[0], ...allPairs[1]];
     const kickers = getKickers(twoPair, cards);
-    return { strength: Strength.TWO_PAIR, hand: [...twoPair, ...kickers] };
+    return { strength: HandStrength.TwoPair, hand: [...twoPair, ...kickers] };
   }
 
   // one pair
   if (allPairs.length > 0) {
     const pair = allPairs[0];
     const kickers = getKickers(pair, cards);
-    return { strength: Strength.ONE_PAIR, hand: [...pair, ...kickers] };
+    return { strength: HandStrength.OnePair, hand: [...pair, ...kickers] };
   }
 
   // high card
-  return { strength: Strength.HIGH_CARD, hand: getKickers([], cards) };
+  return { strength: HandStrength.HighCard, hand: getKickers([], cards) };
 };
 
 export const evaluate = ({

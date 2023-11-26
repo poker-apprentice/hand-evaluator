@@ -34,7 +34,7 @@
     "prepublishOnly": "yarn clean && yarn lint && yarn format && yarn test && yarn build"
   },
   "dependencies": {
-    "@poker-apprentice/types": "^1.1.2",
+    "@poker-apprentice/types": "^1.4.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
