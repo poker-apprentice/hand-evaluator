@@ -17,8 +17,8 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8d'] })).toEqual([
-        { wins: 304, ties: 0, total: 1980 },
-        { wins: 1676, ties: 0, total: 1980 },
+        { wins: 298, ties: 0, total: 1980 },
+        { wins: 1682, ties: 0, total: 1980 },
       ]);
     });
 
@@ -42,9 +42,9 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 58, ties: 234, total: 1806 },
-        { wins: 56, ties: 234, total: 1806 },
-        { wins: 1458, ties: 0, total: 1806 },
+        { wins: 58, ties: 228, total: 1806 },
+        { wins: 56, ties: 228, total: 1806 },
+        { wins: 1464, ties: 0, total: 1806 },
       ]);
     });
 

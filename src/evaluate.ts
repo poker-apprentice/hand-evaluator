@@ -186,11 +186,18 @@ const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
     return { strength: HandStrength.FourOfAKind, hand: [...quads, ...kickers] };
   }
 
-  // full house
+  // full house (via trips and a pair)
   const allTrips = getCardsOfLength(duplicates, 3);
   const allPairs = getCardsOfLength(duplicates, 2);
+
   if (allTrips.length > 0 && allPairs.length > 0) {
     return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allPairs[0]] };
+  }
+
+  // full house (via trips twice, which can happen on a board like KKK5 w/ pocket pair 55)
+  if (allTrips.length >= 2) {
+    allTrips.sort((a, b) => cardComparator(a[0], b[0]));
+    return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allTrips[1].slice(0, 2)] };
   }
 
   // flush
