@@ -44,6 +44,20 @@ describe('evaluate', () => {
     });
   });
 
+  it('recognizes full houses that are comprised of trips twice', () => {
+    expect(
+      evaluate({
+        holeCards: ['5d', '5c'],
+        minimumHoleCards: 0,
+        maximumHoleCards: 2,
+        communityCards: ['Kc', '5h', 'Kd', 'Kh'],
+      }),
+    ).toEqual({
+      strength: HandStrength.FullHouse,
+      hand: ['Kc', 'Kd', 'Kh', '5d', '5c'],
+    });
+  });
+
   it('recognizes flushes', () => {
     expect(evaluate({ holeCards: ['Js', 'Qd', '8s', '4s', '6c', 'Qs', 'As'] })).toEqual({
       strength: HandStrength.Flush,
