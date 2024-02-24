@@ -101,58 +101,39 @@ const result = [
 
 Given a list of hands and community cards, estimate how often each hand will win or tie using a [Monte Carlo simulation](https://en.wikipedia.org/wiki/Monte_Carlo_method) for roughly estimating the odds of a hand winning or tying.
 
+The `simulate` [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction) returns a [generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator) that can be used to run as many Monte Carlo simulations as desired, limited by the maximum number of simulations that are possible for a given scenario based upon the provided inputs. (For example, if there are only 2 streets remaining to be dealt with 45 cards remaining in the deck, then there are 45 \* 44 = 1,980 possible simulations.)
+
 ```ts
 import { Hand, simulate } from '@poker-apprentice/hand-evaluator';
 
 const hand1: Hand = ['As', 'Ks'];
 const hand2: Hand = ['Jd', 'Jh'];
 
-simulate({
+const generate = simulate({
   allHoleCards: [hand1, hand2],
   communityCards: ['Qd', 'Js', '8d'],
   expectedCommunityCardCount: 5,
   expectedHoleCardCount: 2,
   minimumHoleCardsUsed: 0,
   maximumHoleCardsUsed: 2,
-  samples: 2000,
-  samplesPerUpdate: 500,
-  callback: (result) => {
-    const hand1WinPercent = ((result[0].wins / result[0].total) * 100).toFixed(1);
-    console.log(hand1WinPercent, result);
-  },
 });
+
+let result = generate.next();
+while (!result.done) {
+  const hand1WinPercent = ((result[0].wins / result[0].total) * 100).toFixed(1);
+
+  // Output the cumulative results every 500 runs.
+  if (result[0].total % 500 === 0) {
+    console.log(hand1WinPercent, result);
+  }
+
+  result = generate.next();
+}
 
 // => "13.8" [{ wins: 69, ties: 0, total: 500 }, { wins: 431, ties: 0, total: 500 }]
 // => "13.9" [{ wins: 139, ties: 0, total: 1000 }, { wins: 861, ties: 0, total: 1000 }]
 // => "15.4" [{ wins: 231, ties: 0, total: 1500 }, { wins: 1269, ties: 0, total: 1500 }]
 // => "14.8" [{ wins: 295, ties: 0, total: 2000 }, { wins: 1705, ties: 0, total: 2000 }]
-```
-
-Several options can be provided to specify how long to run the simulation, as well as how many samples should be generated per iteration. The greater the number of samples, the closer the result should be to the actual calculated value.
-
-- `samples`: The total number of simulations to run.
-- `samplesPerUpdate`: The number of simulations to run per iteration.
-
-The `simulate` function returns another function that can be used abort/cancel the simulation.
-
-```ts
-const abort = simulate({
-  /* snip */
-});
-// later...
-abort();
-```
-
-```ts
-const abort = simulate({
-  // snip
-  callback: (result) => {
-    console.log(result);
-    if (result.total >= 10000) {
-      abort();
-    }
-  },
-});
 ```
 
 #### `odds`
