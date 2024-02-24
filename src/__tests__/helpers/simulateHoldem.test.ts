@@ -3,8 +3,6 @@ import * as simulateModule from '../../simulate';
 import { simulateHoldem } from '../../helpers/simulateHoldem';
 
 describe('simulateHoldem', () => {
-  const callback = () => {};
-
   it('delegates to `simulate`', () => {
     const simulateSpy = jest.spyOn(simulateModule, 'simulate');
 
@@ -14,8 +12,8 @@ describe('simulateHoldem', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    const abort = simulateHoldem({ allHoleCards, communityCards, callback });
-    abort();
+    const generate = simulateHoldem({ allHoleCards, communityCards });
+    generate.next();
 
     expect(simulateSpy).toHaveBeenCalledWith({
       allHoleCards,
@@ -24,7 +22,6 @@ describe('simulateHoldem', () => {
       expectedHoleCardCount: 2,
       minimumHoleCardsUsed: 0,
       maximumHoleCardsUsed: 2,
-      callback,
     });
   });
 
@@ -35,7 +32,7 @@ describe('simulateHoldem', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => simulateHoldem({ allHoleCards, communityCards, callback })).toThrow(
+    expect(() => simulateHoldem({ allHoleCards, communityCards })).toThrow(
       'Each collection of hole cards accept a maximum of 2 elements',
     );
   });
@@ -47,7 +44,7 @@ describe('simulateHoldem', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
-    expect(() => simulateHoldem({ allHoleCards, communityCards, callback })).toThrow(
+    expect(() => simulateHoldem({ allHoleCards, communityCards })).toThrow(
       'communityCards accepts a maximum of 5 elements',
     );
   });

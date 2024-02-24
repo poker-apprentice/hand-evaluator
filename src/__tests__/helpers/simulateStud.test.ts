@@ -3,8 +3,6 @@ import * as simulateModule from '../../simulate';
 import { simulateStud } from '../../helpers/simulateStud';
 
 describe('simulateStud', () => {
-  const callback = () => {};
-
   it('delegates to `simulate`', () => {
     const simulateSpy = jest.spyOn(simulateModule, 'simulate');
 
@@ -13,8 +11,8 @@ describe('simulateStud', () => {
       ['Jd', 'Jh', '2h', 'Jc', '2s', '3c', '4h'],
     ];
 
-    const abort = simulateStud({ allHoleCards, callback });
-    abort();
+    const generate = simulateStud({ allHoleCards });
+    generate.next();
 
     expect(simulateSpy).toHaveBeenCalledWith({
       allHoleCards,
@@ -23,7 +21,6 @@ describe('simulateStud', () => {
       expectedHoleCardCount: 7,
       minimumHoleCardsUsed: 0,
       maximumHoleCardsUsed: 7,
-      callback,
     });
   });
 
@@ -33,7 +30,7 @@ describe('simulateStud', () => {
       ['Jd', 'Jh', '2h', 'Jc', '2s', '3c', '4h', '5d'],
     ];
 
-    expect(() => simulateStud({ allHoleCards, callback })).toThrow(
+    expect(() => simulateStud({ allHoleCards })).toThrow(
       'Each collection of hole cards accept a maximum of 7 elements',
     );
   });
