@@ -3,8 +3,6 @@ import * as simulateModule from '../../simulate';
 import { simulateOmaha } from '../../helpers/simulateOmaha';
 
 describe('simulateOmaha', () => {
-  const callback = () => {};
-
   it('delegates to `simulate`', () => {
     const simulateSpy = jest.spyOn(simulateModule, 'simulate');
 
@@ -14,8 +12,8 @@ describe('simulateOmaha', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    const abort = simulateOmaha({ allHoleCards, communityCards, callback });
-    abort();
+    const generate = simulateOmaha({ allHoleCards, communityCards });
+    generate.next();
 
     expect(simulateSpy).toHaveBeenCalledWith({
       allHoleCards,
@@ -24,7 +22,6 @@ describe('simulateOmaha', () => {
       expectedHoleCardCount: 4,
       minimumHoleCardsUsed: 2,
       maximumHoleCardsUsed: 2,
-      callback,
     });
   });
 
@@ -35,7 +32,7 @@ describe('simulateOmaha', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => simulateOmaha({ allHoleCards, communityCards, callback })).toThrow(
+    expect(() => simulateOmaha({ allHoleCards, communityCards })).toThrow(
       'Each collection of hole cards accept a maximum of 4 elements',
     );
   });
@@ -47,7 +44,7 @@ describe('simulateOmaha', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
-    expect(() => simulateOmaha({ allHoleCards, communityCards, callback })).toThrow(
+    expect(() => simulateOmaha({ allHoleCards, communityCards })).toThrow(
       'communityCards accepts a maximum of 5 elements',
     );
   });
