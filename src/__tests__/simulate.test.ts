@@ -16,58 +16,21 @@ describe('simulate', () => {
     maximumHoleCardsUsed: 2,
   };
 
-  it('calls callback function with results', (next) => {
-    simulate({
-      ...options,
-      samples: 1000,
-      samplesPerUpdate: 1000,
-      callback: (odds) => {
-        expect(odds[0].total).toEqual(1000);
-        next();
-      },
-    });
+  it('yields results the correct number of times', () => {
+    const generate = simulate(options);
+    expect(generate.next().value[0].total).toEqual(1);
+    expect(generate.next().value[0].total).toEqual(2);
+    expect(generate.next().value[0].total).toEqual(3);
   });
 
-  it('calculates the correct number of samples', (next) => {
-    const samples = 85;
-    const samplesPerUpdate = 10;
-    let callbackCount = 0;
-
-    simulate({
-      ...options,
-      samples,
-      samplesPerUpdate,
-      callback: (odds) => {
-        callbackCount += 1;
-
-        const { total } = odds[0];
-
-        if (callbackCount === Math.ceil(samples / samplesPerUpdate)) {
-          expect(total).toEqual(samples);
-          next();
-        } else {
-          expect(total).toEqual(callbackCount * samplesPerUpdate);
-        }
-      },
-    });
-  });
-
-  it('aborts', (next) => {
-    let callbackCount = 0;
-    const maxIterations = 3;
-
-    const abort = simulate({
-      ...options,
-      callback: () => {
-        callbackCount += 1;
-        if (callbackCount === maxIterations) {
-          abort();
-          setTimeout(() => {
-            expect(callbackCount).toEqual(maxIterations);
-            next();
-          }, 100);
-        }
-      },
-    });
+  it('returns after yielding the maximum number of possible times', () => {
+    let count = 0;
+    for (const _result of simulate(options)) {
+      count += 1;
+    }
+    const remainingCardCount =
+      52 - communityCards.length - allHoleCards.map((c) => c.length).reduce((a, c) => a + c, 0);
+    const permutationCount = remainingCardCount * (remainingCardCount - 1);
+    expect(count).toEqual(permutationCount);
   });
 });

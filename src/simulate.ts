@@ -4,6 +4,7 @@ import { buildScenario } from './utils/buildScenario';
 import { evaluateScenario } from './utils/evaluateScenario';
 import { getRemainingCardCount } from './utils/getRemainingCardCount';
 import { getRemainingCards } from './utils/getRemainingCards';
+import { getPermutations } from './utils/getPermutations';
 
 export interface SimulateOptions {
   allHoleCards: Hand[];
@@ -12,49 +13,23 @@ export interface SimulateOptions {
   expectedHoleCardCount: number;
   minimumHoleCardsUsed: number;
   maximumHoleCardsUsed: number;
-  samples?: number;
-  samplesPerUpdate?: number;
-  callback: (odds: Odds[]) => void;
 }
 
-export type Abort = () => void;
-
-interface HelperOptions extends SimulateOptions {
-  results: Odds[];
-  isRunning: () => boolean;
-}
-
-const getRandomCards = (cards: Card[], count: number): Card[] => {
-  if (count <= 0) {
-    return [];
-  }
-
-  const index = Math.floor(Math.random() * cards.length);
-  const card = cards[index];
-  const updatedCards = [...cards];
-  updatedCards.splice(index, 1);
-
-  return [card, ...getRandomCards(updatedCards, count - 1)];
-};
-
-const simulateHelper = (options: HelperOptions): void => {
-  const {
-    allHoleCards,
-    communityCards,
-    expectedCommunityCardCount,
-    expectedHoleCardCount,
-    minimumHoleCardsUsed,
-    maximumHoleCardsUsed,
-    samples = Infinity,
-    samplesPerUpdate = 1000,
-    results,
-    callback,
-    isRunning,
-  } = options;
-
-  if (samples <= 0 || !isRunning()) {
-    return;
-  }
+/**
+ * TODO
+ * @param {SimulateOptions} options Options for Monte Carlo simulation.
+ * @yields {Odds[]} The combined odds of all simulations run against the provided options.
+ * @returns {Odds[]} The combined odds of all simulations run against the provided options.
+ */
+export function* simulate({
+  allHoleCards,
+  communityCards,
+  expectedCommunityCardCount,
+  expectedHoleCardCount,
+  minimumHoleCardsUsed,
+  maximumHoleCardsUsed,
+}: SimulateOptions): Generator<Odds[], Odds[]> {
+  const results = allHoleCards.map(() => ({ wins: 0, ties: 0, total: 0 }));
 
   const remainingCards = getRemainingCards(allHoleCards, communityCards);
 
@@ -67,50 +42,37 @@ const simulateHelper = (options: HelperOptions): void => {
     expectedHoleCardCount,
   });
 
-  const sampleCount = Math.min(samplesPerUpdate, samples);
+  const remainingCardPermutations = getPermutations(remainingCards, remainingCardCount);
 
-  for (let i = 0; i < sampleCount; i += 1) {
-    const cards = getRandomCards(remainingCards, remainingCardCount);
+  while (remainingCardPermutations.length > 0) {
+    const randomIndex = Math.floor(Math.random() * remainingCardPermutations.length);
+    const [cards] = remainingCardPermutations.splice(randomIndex, 1);
+
     const scenario = buildScenario({
       allHoleCards,
       communityCards,
       expectedHoleCardCount,
       selectedCards: cards,
     });
+
     const scenarioEvaluations = evaluateScenario(scenario, {
       minimumHoleCardsUsed,
       maximumHoleCardsUsed,
     });
-    scenarioEvaluations.forEach((evaluation, index) => {
+
+    for (let index = 0; index < scenarioEvaluations.length; index += 1) {
+      const evaluation = scenarioEvaluations[index];
       results[index].wins += evaluation.wins;
       results[index].ties += evaluation.ties;
       results[index].total += evaluation.total;
-    });
+    }
+
+    if (remainingCardPermutations.length >= 0) {
+      yield results;
+    } else {
+      return results;
+    }
   }
 
-  callback(results);
-
-  setTimeout(() => {
-    simulateHelper({ ...options, samples: samples - sampleCount });
-  });
-};
-
-const getAbortable = () => {
-  let running = true;
-  const abort = () => {
-    running = false;
-  };
-  const isRunning = () => running;
-  return { abort, isRunning };
-};
-
-export const simulate = (options: SimulateOptions): Abort => {
-  const { abort, isRunning } = getAbortable();
-  const results = options.allHoleCards.map(() => ({ wins: 0, ties: 0, total: 0 }));
-
-  setTimeout(() => {
-    simulateHelper({ ...options, results, isRunning });
-  });
-
-  return abort;
-};
+  return results;
+}

@@ -3,8 +3,6 @@ import * as simulateModule from '../../simulate';
 import { simulatePineapple } from '../../helpers/simulatePineapple';
 
 describe('simulatePineapple', () => {
-  const callback = () => {};
-
   it('delegates to `simulate`', () => {
     const simulateSpy = jest.spyOn(simulateModule, 'simulate');
 
@@ -14,8 +12,8 @@ describe('simulatePineapple', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    const abort = simulatePineapple({ allHoleCards, communityCards, callback });
-    abort();
+    const generate = simulatePineapple({ allHoleCards, communityCards });
+    generate.next();
 
     expect(simulateSpy).toHaveBeenCalledWith({
       allHoleCards,
@@ -24,7 +22,6 @@ describe('simulatePineapple', () => {
       expectedHoleCardCount: 3,
       minimumHoleCardsUsed: 0,
       maximumHoleCardsUsed: 2,
-      callback,
     });
   });
 
@@ -35,7 +32,7 @@ describe('simulatePineapple', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => simulatePineapple({ allHoleCards, communityCards, callback })).toThrow(
+    expect(() => simulatePineapple({ allHoleCards, communityCards })).toThrow(
       'Each collection of hole cards accept a maximum of 3 elements',
     );
   });
@@ -47,7 +44,7 @@ describe('simulatePineapple', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
-    expect(() => simulatePineapple({ allHoleCards, communityCards, callback })).toThrow(
+    expect(() => simulatePineapple({ allHoleCards, communityCards })).toThrow(
       'communityCards accepts a maximum of 5 elements',
     );
   });

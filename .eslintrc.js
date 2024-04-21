@@ -13,8 +13,20 @@ module.exports = {
   plugins: ['@typescript-eslint', 'jsdoc'],
   overrides: [
     {
-      files: ['*.js'],
+      files: ['*.js', '*.ts'],
       rules: {
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            args: 'after-used',
+            argsIgnorePattern: '^_',
+            caughtErrors: 'all',
+            caughtErrorsIgnorePattern: '^_',
+            destructuredArrayIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
+            ignoreRestSiblings: true,
+          },
+        ],
         '@typescript-eslint/no-var-requires': 'off',
       },
     },
