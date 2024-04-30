@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-var-requires */
+const path = require('path');
+
+require('ts-node').register({
+  project: path.resolve(__dirname, '..', 'tsconfig.json'),
+});
+
+require('../scripts/benchmark');

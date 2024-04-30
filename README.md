@@ -332,6 +332,25 @@ const abort = simulateStud({
 });
 ```
 
+## Benchmarks
+
+```
+┌─────────┬────────────────────────────┬───────────┬────────────────────┬───────────┬─────────┐
+│ (index) │ Task Name                  │ ops/sec   │ Average Time (ns)  │ Margin    │ Samples │
+├─────────┼────────────────────────────┼───────────┼────────────────────┼───────────┼─────────┤
+│ 0       │ 'evaluate high card'       │ '358,770' │ 2787.2967176923685 │ '±1.11%'  │ 179386  │
+│ 1       │ 'evaluate one pair'        │ '341,161' │ 2931.1632420968276 │ '±1.24%'  │ 170581  │
+│ 2       │ 'evaluate two pair'        │ '327,563' │ 3052.842784921508  │ '±1.46%'  │ 163782  │
+│ 3       │ 'evaluate three of a kind' │ '351,561' │ 2844.4515561978005 │ '±1.27%'  │ 175781  │
+│ 4       │ 'evaluate straight'        │ '296,229' │ 3375.7574452275217 │ '±1.27%'  │ 148115  │
+│ 5       │ 'evaluate flush'           │ '233,025' │ 4291.383188635845  │ '±2.55%'  │ 116564  │
+│ 6       │ 'evaluate full house'      │ '453,556' │ 2204.795638044534  │ '±1.45%'  │ 226779  │
+│ 7       │ 'evaluate four of a kind'  │ '418,995' │ 2386.659104143463  │ '±2.54%'  │ 209498  │
+│ 8       │ 'evaluate straight flush'  │ '302,753' │ 3303.020571156977  │ '±16.37%' │ 151377  │
+│ 9       │ 'evaluate royal flush'     │ '317,533' │ 3149.2775702737345 │ '±1.83%'  │ 158767  │
+└─────────┴────────────────────────────┴───────────┴────────────────────┴───────────┴─────────┘
+```
+
 ## Development
 
 Contributions are welcome. Please create an issue in the project first to discuss any possible enhancements, bugs, or other changes prior to submitting a pull request. Alternatively, browse existing issues if interested in providing a fix.
@@ -390,6 +409,12 @@ yarn lint
 
 ```
 yarn format
+```
+
+### Run benchmarking
+
+```
+yarn benchmark
 ```
 
 ### Build package

@@ -16,6 +16,12 @@
     "outDir": "./dist/types",
     "paths": { "~/*": ["./src/*"] }
   },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    },
+    "files": true
+  },
   "include": ["./src/**/*"],
   "exclude": ["./dist", "./node_modules"]
 }

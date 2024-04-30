@@ -31,6 +31,7 @@
     "format:fix": "prettier . --write",
     "test": "cross-env NODE_ENV=test jest",
     "test:profile": "cross-env PROFILE=true NODE_ENV=test jest",
+    "benchmark": "./bin/benchmark",
     "prepublishOnly": "yarn clean && yarn lint && yarn format && yarn test && yarn build"
   },
   "dependencies": {
@@ -63,7 +64,9 @@
     "prettier": "^2.8.1",
     "rimraf": "^5.0.5",
     "rollup": "^3.29.1",
+    "tinybench": "^2.8.0",
     "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.2",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.9.4"
