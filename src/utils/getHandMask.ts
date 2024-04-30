@@ -10,18 +10,18 @@ const RANK_BITS_MAP: Record<Rank, bigint> = {
   '7': 5n,
   '8': 6n,
   '9': 7n,
-  'T': 8n,
-  'J': 9n,
-  'Q': 10n,
-  'K': 11n,
-  'A': 12n,
+  T: 8n,
+  J: 9n,
+  Q: 10n,
+  K: 11n,
+  A: 12n,
 };
 
 const SUIT_BITS_MAP: Record<Suit, bigint> = {
-  'c': 0n,
-  'd': 1n,
-  'h': 2n,
-  's': 3n,
+  c: 0n,
+  d: 1n,
+  h: 2n,
+  s: 3n,
 };
 
 const BITS_RANK_MAP = invert(RANK_BITS_MAP) as Record<number, Rank>;
@@ -29,7 +29,7 @@ const BITS_RANK_MAP = invert(RANK_BITS_MAP) as Record<number, Rank>;
 const getCardValue = (card: Card): bigint => {
   const rank = RANK_BITS_MAP[getRank(card)];
   const suit = SUIT_BITS_MAP[getSuit(card)];
-  return rank + (suit * 13n);
+  return rank + suit * 13n;
 };
 
 export const getHandMask = (hand: Hand): bigint => {
@@ -43,5 +43,4 @@ export const getHandMask = (hand: Hand): bigint => {
   return handMask;
 };
 
-export const getMaskedCardRank = (cardMask: bigint): Rank =>
-  BITS_RANK_MAP[Number(cardMask % 13n)];
+export const getMaskedCardRank = (cardMask: bigint): Rank => BITS_RANK_MAP[Number(cardMask % 13n)];
