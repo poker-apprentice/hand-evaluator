@@ -1,6 +1,6 @@
 import { Card, Hand } from '@poker-apprentice/types';
-import * as simulateModule from '../../simulate';
 import { simulateHoldem } from '../../helpers/simulateHoldem';
+import * as simulateModule from '../../simulate';
 
 describe('simulateHoldem', () => {
   it('delegates to `simulate`', () => {

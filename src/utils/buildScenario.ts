@@ -1,5 +1,5 @@
 import { Card, Hand } from '@poker-apprentice/types';
-import { cloneDeep } from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
 import { Scenario } from './evaluateScenario';
 
 interface BuildScenarioOptions {

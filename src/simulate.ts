@@ -2,9 +2,9 @@ import { Card, Hand } from '@poker-apprentice/types';
 import { Odds } from './types';
 import { buildScenario } from './utils/buildScenario';
 import { evaluateScenario } from './utils/evaluateScenario';
+import { getPermutations } from './utils/getPermutations';
 import { getRemainingCardCount } from './utils/getRemainingCardCount';
 import { getRemainingCards } from './utils/getRemainingCards';
-import { getPermutations } from './utils/getPermutations';
 
 export interface SimulateOptions {
   allHoleCards: Hand[];
