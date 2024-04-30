@@ -1,4 +1,4 @@
-import { Card, Hand, HandStrength, Suit, getRank, getSuit } from '@poker-apprentice/types';
+import { Card, Hand, HandStrength, getRank, getSuit } from '@poker-apprentice/types';
 import { assertNever } from 'assert-never';
 import findKey from 'lodash/findKey';
 import { compare } from './compare';
@@ -11,11 +11,15 @@ import {
   CARD_MASK,
   HAND_MASK_BIT_SHIFT,
 } from './constants/bitmasks';
+import { CARD_RANK_TABLE } from './constants/cardRankTable';
 import { rankOrder } from './constants/rankOrder';
 import { EvaluatedHand } from './types';
+import { bigintKey } from './utils/bigintKey';
 import { getCombinations } from './utils/getCombinations';
-import { getEffectiveHandMask } from './utils/getEffectiveHandMask';
+import { getHandMask } from './utils/getHandMask';
+import { getHandValueMask } from './utils/getHandValueMask';
 import { getMaskedCardRank } from './utils/getMaskedCardRank';
+import { getSuitedRankMasks } from './utils/getSuitedRankMasks';
 
 export interface EvaluateOptions {
   holeCards: Card[];
@@ -98,29 +102,12 @@ const take = <T>(array: T[], index: number): T => {
   return item;
 };
 
-const getFlushCards = (cards: Card[]): Card[] => {
-  const suitCounts = cards.reduce(
-    (counts, card) => {
-      counts[getSuit(card)] += 1;
-      return counts;
-    },
-    { c: 0, d: 0, h: 0, s: 0 } satisfies Record<Suit, number>,
-  );
-
-  const flushSuit = findKey(suitCounts, (v) => v >= 5) as Suit;
-
-  return cards.filter((card) => getSuit(card) === flushSuit);
-};
-
 const constructHand = (
-  originalCards: Card[],
+  cards: Card[],
   cardMasks: bigint[],
   maskIndices: [number, number, number, number, number],
-  isFlush: boolean = false,
-): Hand => {
-  const cards = isFlush ? getFlushCards(originalCards) : [...originalCards];
-
-  return maskIndices.reduce((result: Hand, maskIndex, i) => {
+): Hand =>
+  maskIndices.reduce((result: Hand, maskIndex, i) => {
     if (maskIndex >= 0) {
       const cardMask = cardMasks[maskIndex];
       const maskedCardRank = getMaskedCardRank(cardMask);
@@ -142,16 +129,26 @@ const constructHand = (
     }
     return result;
   }, []);
-};
 
-const getHand = (handMask: bigint, strength: HandStrength, cards: Card[]): Hand => {
+const getHand = (
+  originalCards: Card[],
+  handMask: bigint,
+  handValueMask: bigint,
+  strength: HandStrength,
+): Hand => {
   const cardMasks = [
-    (handMask >> CARD_1_BIT_SHIFT) & CARD_MASK,
-    (handMask >> CARD_2_BIT_SHIFT) & CARD_MASK,
-    (handMask >> CARD_3_BIT_SHIFT) & CARD_MASK,
-    (handMask >> CARD_4_BIT_SHIFT) & CARD_MASK,
-    (handMask >> CARD_5_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_1_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_2_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_3_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_4_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_5_BIT_SHIFT) & CARD_MASK,
   ];
+
+  const suits = getSuitedRankMasks(handMask);
+  const flushSuit = findKey(suits, (v) => CARD_RANK_TABLE[bigintKey(v)] >= 5);
+  const cards = flushSuit
+    ? originalCards.filter((card) => getSuit(card) === flushSuit)
+    : originalCards;
 
   switch (strength) {
     case HandStrength.HighCard:
@@ -165,15 +162,15 @@ const getHand = (handMask: bigint, strength: HandStrength, cards: Card[]): Hand 
     case HandStrength.Straight:
       return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
     case HandStrength.Flush:
-      return constructHand(cards, cardMasks, [0, 1, 2, 3, 4], true);
+      return constructHand(cards, cardMasks, [0, 1, 2, 3, 4]);
     case HandStrength.FullHouse:
       return constructHand(cards, cardMasks, [0, 0, 0, 1, 1]);
     case HandStrength.FourOfAKind:
       return constructHand(cards, cardMasks, [0, 0, 0, 0, 1]);
     case HandStrength.StraightFlush:
-      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1], true);
+      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
     case HandStrength.RoyalFlush:
-      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1], true);
+      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
     default:
       return assertNever(strength);
   }
@@ -190,9 +187,10 @@ const getStrength = (handMask: bigint): HandStrength => {
 };
 
 const evaluateHand = (cards: Card[]): EvaluatedHand => {
-  const value = getEffectiveHandMask(cards);
+  const handMask = getHandMask(cards);
+  const value = getHandValueMask(handMask);
   const strength = getStrength(value);
-  const hand = getHand(value, strength, cards);
+  const hand = getHand(cards, handMask, value, strength);
 
   return { strength, hand, value };
 };

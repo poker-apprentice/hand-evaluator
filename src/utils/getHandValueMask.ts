@@ -1,4 +1,4 @@
-import { Card } from '@poker-apprentice/types';
+import sum from 'lodash/sum';
 import {
   CARD_1_BIT_SHIFT,
   CARD_1_MASK,
@@ -16,34 +16,25 @@ import {
   HAND_MASK_STRAIGHT_FLUSH,
   HAND_MASK_THREE_OF_A_KIND,
   HAND_MASK_TWO_PAIR,
-  MASK_OFFSET_CLUBS,
-  MASK_OFFSET_DIAMONDS,
-  MASK_OFFSET_HEARTS,
-  MASK_OFFSET_SPADES,
-  RANK_MASK,
 } from '../constants/bitmasks';
 import { CARD_RANK_TABLE } from '../constants/cardRankTable';
 import { STRAIGHT_TABLE } from '../constants/straightTable';
 import { TOP_CARD_TABLE } from '../constants/topCardTable';
 import { TOP_FIVE_CARDS_TABLE } from '../constants/topFiveCardsTable';
 import { bigintKey } from './bigintKey';
-import { getHandMask } from './getHandMask';
+import { getSuitedRankMasks } from './getSuitedRankMasks';
 import { uint } from './uint';
 
 // Returns a bit-mask representing the strength of the best possible hand from the provided cards.
-export const getEffectiveHandMask = (cards: Card[]): bigint => {
-  const handMask = getHandMask(cards);
+export const getHandValueMask = (handMask: bigint): bigint => {
   let retval = 0n;
 
-  // seperate out by suit
-  const sc = uint((handMask >> MASK_OFFSET_CLUBS) & RANK_MASK);
-  const sd = uint((handMask >> MASK_OFFSET_DIAMONDS) & RANK_MASK);
-  const sh = uint((handMask >> MASK_OFFSET_HEARTS) & RANK_MASK);
-  const ss = uint((handMask >> MASK_OFFSET_SPADES) & RANK_MASK);
+  const { c: sc, d: sd, h: sh, s: ss } = getSuitedRankMasks(handMask);
 
   const ranks = sc | sd | sh | ss;
   const ranksCount = CARD_RANK_TABLE[bigintKey(ranks)];
-  const possibleDuplicatesCount = cards.length - ranksCount;
+  const numCards = sum([sc, sd, sh, ss].map((mask) => CARD_RANK_TABLE[bigintKey(mask)]));
+  const possibleDuplicatesCount = numCards - ranksCount;
 
   // Check for straight, flush, or straight flush, and return if we can
   // determine immediately that that this is the best possible hand.
