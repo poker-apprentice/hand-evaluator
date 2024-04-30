@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@poker-apprentice/types": "^1.4.0",
+    "assert-never": "^1.2.1",
     "lodash": "^4.17.21",
     "v8-profiler-next": "^1.10.0"
   },

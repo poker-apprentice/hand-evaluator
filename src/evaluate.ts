@@ -1,10 +1,15 @@
-import { Card, HandStrength, Rank, Suit, getRank, getSuit } from '@poker-apprentice/types';
+import { Card, Hand, HandStrength, Suit, getRank, getSuit } from '@poker-apprentice/types';
+import { assertNever } from 'assert-never';
+import findKey from 'lodash/findKey';
 import { compare } from './compare';
-import { rankOrder } from './constants';
+import { BITS_TABLE } from './constants/bits';
+import { STRAIGHT_TABLE } from './constants/straights';
+import { TOP_FIVE_CARDS_TABLE } from './constants/topFiveCards';
+import { TOP_CARD_TABLE } from './constants/topCard';
 import { EvaluatedHand } from './types';
-import { cardComparator } from './utils/cardComparator';
 import { getCombinations } from './utils/getCombinations';
-import { handComparator } from './utils/handComparator';
+import { getHandMask, getMaskedCardRank } from './utils/getHandMask';
+import { rankOrder } from './constants/rankOrder';
 
 export interface EvaluateOptions {
   holeCards: Card[];
@@ -15,92 +20,45 @@ export interface EvaluateOptions {
 
 const HAND_SIZE = 5;
 
+const SUIT_CLUBS = 0n;
+const SUIT_DIAMONDS = 1n;
+const SUIT_HEARTS = 2n;
+const SUIT_SPADES = 3n;
+
+const MASK_OFFSET_CLUBS = 13n * SUIT_CLUBS;
+const MASK_OFFSET_DIAMONDS = 13n * SUIT_DIAMONDS;
+const MASK_OFFSET_HEARTS = 13n * SUIT_HEARTS;
+const MASK_OFFSET_SPADES = 13n * SUIT_SPADES;
+
+const RANK_MASK = 0b1111111111111n;
+
+const CARD_BIT_WIDTH = 4n;
+const CARD_5_BIT_SHIFT = 0n;
+const CARD_4_BIT_SHIFT = CARD_BIT_WIDTH + CARD_5_BIT_SHIFT; // 4n
+const CARD_3_BIT_SHIFT = CARD_BIT_WIDTH + CARD_4_BIT_SHIFT; // 8n
+const CARD_2_BIT_SHIFT = CARD_BIT_WIDTH + CARD_3_BIT_SHIFT; // 12n
+const CARD_1_BIT_SHIFT = CARD_BIT_WIDTH + CARD_2_BIT_SHIFT; // 16n
+const HAND_MASK_BIT_SHIFT = 24n;
+
+const CARD_MASK = 0x0Fn;
+const CARD_1_MASK = 0x000F0000n;
+const CARD_2_MASK = 0x0000F000n;
+const CARD_5_MASK = 0x0000000Fn;
+
+const HAND_MASK_HIGH_CARD = BigInt(HandStrength.HighCard) << HAND_MASK_BIT_SHIFT;
+const HAND_MASK_ONE_PAIR = BigInt(HandStrength.OnePair) << HAND_MASK_BIT_SHIFT;
+const HAND_MASK_TWO_PAIR = BigInt(HandStrength.TwoPair) << HAND_MASK_BIT_SHIFT;
+const HAND_MASK_THREE_OF_A_KIND = BigInt(HandStrength.ThreeOfAKind) << HAND_MASK_BIT_SHIFT;
+const HAND_MASK_STRAIGHT = BigInt(HandStrength.Straight) << HAND_MASK_BIT_SHIFT;
+const HAND_MASK_FLUSH = BigInt(HandStrength.Flush) << HAND_MASK_BIT_SHIFT;
+const HAND_MASK_FULL_HOUSE = BigInt(HandStrength.FullHouse) << HAND_MASK_BIT_SHIFT;
+const HAND_MASK_FOUR_OF_A_KIND = BigInt(HandStrength.FourOfAKind) << HAND_MASK_BIT_SHIFT;
+const HAND_MASK_STRAIGHT_FLUSH = BigInt(HandStrength.StraightFlush) << HAND_MASK_BIT_SHIFT;
+
 const uniq = <T>(items: T[]) => Array.from(new Set(items));
 
 const max = <T>(items: T[]) =>
   items.reduce((accum, current) => (current > accum ? current : accum));
-
-const getStraights = (cards: Card[]): Card[][] => {
-  const straights: Card[][] = [];
-
-  // allow ace to be treated as high or low
-  const lastAceIndex = cards.findLastIndex((card) => getRank(card) === 'A');
-  const adjustedCards =
-    lastAceIndex === -1 ? cards : [...cards, ...cards.slice(0, lastAceIndex + 1)];
-
-  for (let i = 0; i < adjustedCards.length - HAND_SIZE + 1; i += 1) {
-    const currentHands: Card[][] = [[adjustedCards[i]]];
-    for (let j = i + 1; j < adjustedCards.length; j += 1) {
-      const card = adjustedCards[j];
-      const rank = getRank(card);
-      const lastRank = getRank(currentHands[0][currentHands[0].length - 1]);
-
-      if (currentHands[0].length < HAND_SIZE) {
-        if (rank === lastRank) {
-          // If the current card is the same rank as the last card added, then append it
-          // to the list of possible hands.
-          const newHand = currentHands[0].slice(0, -1);
-          newHand.push(card);
-          currentHands.push(newHand);
-        } else if (rankOrder.indexOf(rank) === rankOrder.indexOf(lastRank) - 1) {
-          // If the current card is one rank lower than the last card, then append it
-          // to all possible hands.
-          currentHands.forEach((currentHand) => currentHand.push(card));
-        } else if (
-          rankOrder.indexOf(rank) === rankOrder.length - 1 &&
-          rankOrder.indexOf(lastRank) === 0
-        ) {
-          // If the current card is an ace, and the last card was a deuce, then append it
-          // to all possible hands.
-          currentHands.forEach((currentHand) => currentHand.push(card));
-        }
-      }
-    }
-    straights.push(...currentHands.filter((hand) => hand.length === HAND_SIZE));
-  }
-
-  // order straights from biggest to smallest
-  return straights.sort(handComparator);
-};
-
-const getDuplicates = (cards: Card[]): Map<Rank, Card[]> => {
-  const duplicates: Map<Rank, Card[]> = new Map();
-  cards.forEach((card) => {
-    const rank = getRank(card);
-    const current = duplicates.get(rank) ?? [];
-    current.push(card);
-    duplicates.set(rank, current);
-  });
-  return duplicates;
-};
-
-const getCardsOfLength = <T>(cardGroups: Map<T, Card[]>, count: number): Card[][] => {
-  const values = [...cardGroups.values()];
-  return values.filter((cards) => cards.length === count).sort(handComparator);
-};
-
-const getFlushes = (cards: Card[]): Card[][] => {
-  const suitedCards: Map<Suit, Card[]> = new Map();
-  cards.forEach((card) => {
-    const suit = getSuit(card);
-    const current = suitedCards.get(suit) ?? [];
-    current.push(card);
-    suitedCards.set(suit, current);
-  });
-
-  // only use the first 5 cards of the same suit to make up a hand
-  suitedCards.forEach((current) => {
-    current.splice(HAND_SIZE);
-  });
-
-  // only return flushes made up of a legitimate hand size
-  return getCardsOfLength(suitedCards, HAND_SIZE);
-};
-
-const getKickers = (hand: Card[], allCards: Card[]) => {
-  const kickerCount = HAND_SIZE - hand.length;
-  return allCards.filter((card) => !hand.includes(card)).slice(0, kickerCount);
-};
 
 const getAllHandCombinations = ({
   holeCards,
@@ -164,76 +122,235 @@ const getAllHandCombinations = ({
   return allHandCombinations.filter((cards) => cards.length === longestCombination);
 };
 
-const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
-  const cards = unsortedCards.sort(cardComparator);
-  const straights = getStraights(cards);
+// convert a number to an unsigned int
+const uint = (n: bigint) => BigInt.asUintN(32, n);
 
-  // straight flush/royal flush
-  const straightFlushes = straights.filter((straight) => uniq(straight.map(getSuit)).length === 1);
-  if (straightFlushes.length > 0) {
-    const strength =
-      getRank(straightFlushes[0][0]) === 'A' ? HandStrength.RoyalFlush : HandStrength.StraightFlush;
-    return { strength, hand: straightFlushes[0] };
+// Returns a bit-mask representing the strength of the best possible hand from the provided cards.
+const getEffectiveHandMask = (cards: Card[]): bigint => {
+  const handMask = getHandMask(cards);
+  let retval = 0n;
+
+  // seperate out by suit
+  const sc = (handMask >> MASK_OFFSET_CLUBS) & RANK_MASK;
+  const sd = (handMask >> MASK_OFFSET_DIAMONDS) & RANK_MASK;
+  const sh = (handMask >> MASK_OFFSET_HEARTS) & RANK_MASK;
+  const ss = (handMask >> MASK_OFFSET_SPADES) & RANK_MASK;
+
+  const ranks = sc | sd | sh | ss;
+  const ranksCount = BITS_TABLE[Number(ranks)];
+  const possibleDuplicatesCount = cards.length - ranksCount;
+
+  // Check for straight, flush, or straight flush, and return if we can
+  // determine immediately that that this is the best possible hand.
+  if (ranksCount >= 5) {
+    // Check for flush.
+    // TODO: This approach won't work for games with many cards per hand, such as 5-card omaha,
+    //       since such a hand could have multiple flushes.
+    const matchingMask = [ss, sc, sd, sh].find((mask) => BITS_TABLE[Number(mask)] >= 5);
+    if (matchingMask !== undefined) {
+      const st = STRAIGHT_TABLE[Number(matchingMask)];
+      if (st !== 0n) {
+        return HAND_MASK_STRAIGHT_FLUSH + (st << CARD_1_BIT_SHIFT);
+      }
+      retval = HAND_MASK_FLUSH + TOP_FIVE_CARDS_TABLE[Number(matchingMask)];
+    } else {
+      const st = STRAIGHT_TABLE[Number(ranks)];
+      if (st !== 0n) {
+        retval = HAND_MASK_STRAIGHT + (st << CARD_1_BIT_SHIFT);
+      }
+    };
+
+    // Another win -- if there can't be a FH/Quads (n_dups < 3), which is true most of the time
+    // when there is a made hand, then if we've found a five card hand, just return.  This skips
+    // the whole process of computing two-mask/three-mask/etc.
+    if (retval !== 0n && possibleDuplicatesCount < 3) {
+      return retval;
+    }
   }
 
-  const duplicates: Map<Rank, Card[]> = getDuplicates(cards);
+  // By the time we're here, either: 
+  //  1. there's no five-card hand possible (flush or straight), or
+  //  2. there's a flush or straight, but we know that there are enough
+  //     duplicates to make a full house / quads possible.
+  switch (possibleDuplicatesCount) {
+    case 0:
+      // It's a no-pair hand.
+      return HAND_MASK_HIGH_CARD + TOP_FIVE_CARDS_TABLE[Number(ranks)];
+    case 1: {
+      // It's a one-pair hand.
+      const twoMask = ranks ^ (sc ^ sd ^ sh ^ ss);
 
-  // four of a kind
-  const allQuads = getCardsOfLength(duplicates, 4);
-  if (allQuads.length > 0) {
-    const quads = allQuads[0];
-    const kickers = getKickers(quads, cards);
-    return { strength: HandStrength.FourOfAKind, hand: [...quads, ...kickers] };
+      retval = uint(HAND_MASK_ONE_PAIR + (TOP_CARD_TABLE[Number(twoMask)] << CARD_1_BIT_SHIFT));
+      const t = ranks ^ twoMask; // Only one bit set in twoMask
+      // Get the top five cards in what is left, drop all but the top three
+      // cards, and shift them by one to get the three desired kickers.
+      const kickers = (TOP_FIVE_CARDS_TABLE[Number(t)] >> CARD_BIT_WIDTH) & ~CARD_5_MASK;
+      retval += kickers;
+      return retval;
+    }
+    case 2: {
+      // Either two pair or trips.  Check two pair first.
+      const twoMask = ranks ^ (sc ^ sd ^ sh ^ ss);
+      if (twoMask !== 0n) {
+        const t = ranks ^ twoMask; // Exactly two bits set in twoMask
+        return uint(
+          HAND_MASK_TWO_PAIR
+            + (TOP_FIVE_CARDS_TABLE[Number(twoMask)] & (CARD_1_MASK | CARD_2_MASK))
+            + (TOP_CARD_TABLE[Number(t)] << CARD_3_BIT_SHIFT)
+        );
+      }
+      // Must be trips.
+      const threeMask = ((sc & sd) | (sh & ss)) & ((sc & sh) | (sd & ss));
+      retval = uint(HAND_MASK_THREE_OF_A_KIND + (TOP_CARD_TABLE[Number(threeMask)] << CARD_1_BIT_SHIFT));
+      let t = ranks ^ threeMask; // Only one bit set in threeMask
+      const second = TOP_CARD_TABLE[Number(t)];
+      retval += (second << CARD_2_BIT_SHIFT);
+      t ^= (1n << second);
+      retval += uint(TOP_CARD_TABLE[Number(t)] << CARD_3_BIT_SHIFT);
+      return retval;
+    }
+    default: {
+      // Possible quads, fullhouse, straight or flush, or two pair
+      const fourMask = sh & sd & sc & ss;
+      if (fourMask !== 0n) {
+        const tc = TOP_CARD_TABLE[Number(fourMask)];
+        retval = uint(
+          HAND_MASK_FOUR_OF_A_KIND
+          + (tc << CARD_1_BIT_SHIFT)
+          + ((TOP_CARD_TABLE[Number(ranks ^ (1n << tc))]) << CARD_2_BIT_SHIFT));
+        return retval;
+      };
+
+      // Technically, `threeMask` as defined below is really the set of bits that are set in three
+      // or four of the suits, but since we've already eliminated quads, this is okay.  Similarly,
+      // `twoMask` really represents two or four of the suits, but since we've already eliminated
+      // quads, we can use this shortcut.
+      const twoMask = ranks ^ (sc ^ sd ^ sh ^ ss);
+      if (BITS_TABLE[Number(twoMask)] !== possibleDuplicatesCount) {
+        // Must be trips then, which really means there is a full house since we have 3+ duplicates.
+        const threeMask = ((sc & sd) | (sh & ss)) & ((sc & sh) | (sd & ss));
+        retval = HAND_MASK_FULL_HOUSE;
+        const tc = TOP_CARD_TABLE[Number(threeMask)];
+        retval += (tc << CARD_1_BIT_SHIFT);
+        const t = (twoMask | threeMask) ^ (1n << tc);
+        retval += uint(TOP_CARD_TABLE[Number(t)] << CARD_2_BIT_SHIFT);
+        return retval;
+      };
+
+      if (retval !== 0n) {
+        // Flush and straight.
+        return retval;
+      }
+
+      // Must be two pair.
+      retval = HAND_MASK_TWO_PAIR;
+      const top = TOP_CARD_TABLE[Number(twoMask)];
+      retval += (top << CARD_1_BIT_SHIFT);
+      const second = TOP_CARD_TABLE[Number(twoMask ^ (1n << top))];
+      retval += (second << CARD_2_BIT_SHIFT);
+      retval += uint((TOP_CARD_TABLE[Number(ranks ^ (1n << top) ^ (1n << second))]) << CARD_3_BIT_SHIFT);
+      return retval;
+    }
   }
+};
 
-  // full house (via trips and a pair)
-  const allTrips = getCardsOfLength(duplicates, 3);
-  const allPairs = getCardsOfLength(duplicates, 2);
+const take = <T>(array: T[], index: number): T => {
+  const [item] = array.splice(index, 1);
+  return item;
+};
 
-  if (allTrips.length > 0 && allPairs.length > 0) {
-    return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allPairs[0]] };
+const getFlushCards = (cards: Card[]): Card[] => {
+  const suitCounts = cards.reduce((counts, card) => {
+    counts[getSuit(card)] += 1;
+    return counts;
+  }, { c: 0, d: 0, h: 0, s: 0 } satisfies Record<Suit, number>);
+
+  const flushSuit = findKey(suitCounts, (v) => v >= 5) as Suit;
+
+  return cards.filter((card) => getSuit(card) === flushSuit);
+};
+
+const constructHand = (
+  originalCards: Card[],
+  cardMasks: bigint[],
+  maskIndices: [number, number, number, number, number],
+  isFlush: boolean = false,
+): Hand => {
+  const cards = isFlush ? getFlushCards(originalCards) : [...originalCards];
+
+  return maskIndices.reduce((result: Hand, maskIndex, i) => {
+    if (maskIndex >= 0) {
+      const cardMask = cardMasks[maskIndex];
+      const maskedCardRank = getMaskedCardRank(cardMask);
+      const cardIndex = cards.findIndex((card) => getRank(card) === maskedCardRank);
+      const card = take(cards, cardIndex);
+      if (card !== undefined) {
+        result.push(card);
+      }
+    } else {
+      const referencedCard = result[i - 1];
+      const referencedRank = rankOrder.indexOf(getRank(referencedCard));
+      const cardIndex = cards.findIndex((card) => getRank(card) === rankOrder.at((referencedRank + maskIndex + 13) % 13));
+      const card = take(cards, cardIndex);
+      if (card !== undefined) {
+        result.push(card);
+      }
+    }
+    return result;
+  }, []);
+}
+
+const getHand = (handMask: bigint, strength: HandStrength, cards: Card[]): Hand => {
+  const cardMasks = [
+    (handMask >> CARD_1_BIT_SHIFT) & CARD_MASK,
+    (handMask >> CARD_2_BIT_SHIFT) & CARD_MASK,
+    (handMask >> CARD_3_BIT_SHIFT) & CARD_MASK,
+    (handMask >> CARD_4_BIT_SHIFT) & CARD_MASK,
+    (handMask >> CARD_5_BIT_SHIFT) & CARD_MASK,
+  ];
+
+  switch (strength) {
+    case HandStrength.HighCard:
+      return constructHand(cards, cardMasks, [0, 1, 2, 3, 4]);
+    case HandStrength.OnePair:
+      return constructHand(cards, cardMasks, [0, 0, 1, 2, 3]);
+    case HandStrength.TwoPair:
+      return constructHand(cards, cardMasks, [0, 0, 1, 1, 2]);
+    case HandStrength.ThreeOfAKind:
+      return constructHand(cards, cardMasks, [0, 0, 0, 1, 2]);
+    case HandStrength.Straight:
+      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
+    case HandStrength.Flush:
+      return constructHand(cards, cardMasks, [0, 1, 2, 3, 4], true);
+    case HandStrength.FullHouse:
+      return constructHand(cards, cardMasks, [0, 0, 0, 1, 1]);
+    case HandStrength.FourOfAKind:
+      return constructHand(cards, cardMasks, [0, 0, 0, 0, 1]);
+    case HandStrength.StraightFlush:
+      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1], true);
+    case HandStrength.RoyalFlush:
+      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1], true);
+    default:
+      return assertNever(strength);
   }
+};
 
-  // full house (via trips twice, which can happen on a board like KKK5 w/ pocket pair 55)
-  if (allTrips.length >= 2) {
-    allTrips.sort((a, b) => cardComparator(a[0], b[0]));
-    return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allTrips[1].slice(0, 2)] };
+const getStrength = (handMask: bigint): HandStrength => {
+  const strength = Number(handMask >> HAND_MASK_BIT_SHIFT);
+  const highCardRank = getMaskedCardRank((handMask >> CARD_1_BIT_SHIFT) & CARD_MASK);
+
+  if (strength === HandStrength.StraightFlush && highCardRank === 'A') {
+    return HandStrength.RoyalFlush;
   }
+  return strength;
+};
 
-  // flush
-  const flushes = getFlushes(cards);
-  if (flushes.length > 0) {
-    return { strength: HandStrength.Flush, hand: flushes[0] };
-  }
+const evaluateHand = (cards: Card[]): EvaluatedHand => {
+  const value = getEffectiveHandMask(cards);
+  const strength = getStrength(value);
+  const hand = getHand(value, strength, cards);
 
-  // straight
-  if (straights.length > 0) {
-    return { strength: HandStrength.Straight, hand: straights[0] };
-  }
-
-  // three of a kind
-  if (allTrips.length > 0) {
-    const trips = allTrips[0];
-    const kickers = getKickers(trips, cards);
-    return { strength: HandStrength.ThreeOfAKind, hand: [...trips, ...kickers] };
-  }
-
-  // two pair
-  if (allPairs.length >= 2) {
-    const twoPair = [...allPairs[0], ...allPairs[1]];
-    const kickers = getKickers(twoPair, cards);
-    return { strength: HandStrength.TwoPair, hand: [...twoPair, ...kickers] };
-  }
-
-  // one pair
-  if (allPairs.length > 0) {
-    const pair = allPairs[0];
-    const kickers = getKickers(pair, cards);
-    return { strength: HandStrength.OnePair, hand: [...pair, ...kickers] };
-  }
-
-  // high card
-  return { strength: HandStrength.HighCard, hand: getKickers([], cards) };
+  return { strength, hand, value };
 };
 
 export const evaluate = ({
