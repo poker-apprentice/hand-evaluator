@@ -1,5 +1,6 @@
 import { Card, Hand, Rank, Suit, getRank, getSuit } from '@poker-apprentice/types';
 import invert from 'lodash/invert';
+import { bigintKey } from './bigintKey';
 
 const RANK_BITS_MAP: Record<Rank, bigint> = {
   '2': 0n,
@@ -43,4 +44,5 @@ export const getHandMask = (hand: Hand): bigint => {
   return handMask;
 };
 
-export const getMaskedCardRank = (cardMask: bigint): Rank => BITS_RANK_MAP[Number(cardMask % 13n)];
+export const getMaskedCardRank = (cardMask: bigint): Rank =>
+  BITS_RANK_MAP[bigintKey(cardMask % 13n)];
