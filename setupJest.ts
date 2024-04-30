@@ -1,12 +1,7 @@
 import fs from 'fs';
+import v8Profiler from 'v8-profiler-next';
 
-/**
- * TODO: profiler support disabled until Node v20 is supported.
- * https://github.com/hyj1991/v8-profiler-next/issues/65
- */
-// import v8Profiler from 'v8-profiler-next';
-
-const isProfiling = false; // process.env.PROFILE === 'true';
+const isProfiling = process.env.PROFILE === 'true';
 
 if (isProfiling) {
   const timestamp = new Date().getTime();
@@ -28,7 +23,9 @@ if (isProfiling) {
       .toLowerCase();
 
     profile.export((_error, result) => {
-      fs.writeFileSync(`profiles/${filename}-${timestamp}.cpuprofile`, result);
+      if (result) {
+        fs.writeFileSync(`profiles/${filename}-${timestamp}.cpuprofile`, result);
+      }
       profile.delete();
     });
   });

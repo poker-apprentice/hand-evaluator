@@ -30,12 +30,13 @@
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
     "test": "cross-env NODE_ENV=test jest",
-    "test:profile": "cross-env PROFILE=true yarn test",
+    "test:profile": "cross-env PROFILE=true NODE_ENV=test jest",
     "prepublishOnly": "yarn clean && yarn lint && yarn format && yarn test && yarn build"
   },
   "dependencies": {
     "@poker-apprentice/types": "^1.4.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "v8-profiler-next": "^1.10.0"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.22.15",
