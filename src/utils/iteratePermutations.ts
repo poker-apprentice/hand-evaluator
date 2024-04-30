@@ -1,4 +1,5 @@
 // Generate all permutations of an array.
+// eslint-disable-next-line jsdoc/require-jsdoc
 export function* iteratePermutations<T>(items: T[], count: number): Generator<T[], void> {
   items = [...items];
 

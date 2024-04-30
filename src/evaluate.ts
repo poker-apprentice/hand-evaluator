@@ -2,16 +2,20 @@ import { Card, Hand, HandStrength, Suit, getRank, getSuit } from '@poker-apprent
 import { assertNever } from 'assert-never';
 import findKey from 'lodash/findKey';
 import { compare } from './compare';
-import { BITS_TABLE } from './constants/bits';
-import { STRAIGHT_TABLE } from './constants/straights';
-import { TOP_FIVE_CARDS_TABLE } from './constants/topFiveCards';
+import {
+  CARD_1_BIT_SHIFT,
+  CARD_2_BIT_SHIFT,
+  CARD_3_BIT_SHIFT,
+  CARD_4_BIT_SHIFT,
+  CARD_5_BIT_SHIFT,
+  CARD_MASK,
+  HAND_MASK_BIT_SHIFT,
+} from './constants/bitmasks';
 import { rankOrder } from './constants/rankOrder';
-import { TOP_CARD_TABLE } from './constants/topCard';
 import { EvaluatedHand } from './types';
 import { getCombinations } from './utils/getCombinations';
-import { getHandMask, getMaskedCardRank } from './utils/getHandMask';
-import { uint } from './utils/uint';
-import { bigintKey } from './utils/bigintKey';
+import { getEffectiveHandMask } from './utils/getEffectiveHandMask';
+import { getMaskedCardRank } from './utils/getMaskedCardRank';
 
 export interface EvaluateOptions {
   holeCards: Card[];
@@ -21,41 +25,6 @@ export interface EvaluateOptions {
 }
 
 const HAND_SIZE = 5;
-
-const SUIT_CLUBS = 0n;
-const SUIT_DIAMONDS = 1n;
-const SUIT_HEARTS = 2n;
-const SUIT_SPADES = 3n;
-
-const MASK_OFFSET_CLUBS = 13n * SUIT_CLUBS;
-const MASK_OFFSET_DIAMONDS = 13n * SUIT_DIAMONDS;
-const MASK_OFFSET_HEARTS = 13n * SUIT_HEARTS;
-const MASK_OFFSET_SPADES = 13n * SUIT_SPADES;
-
-const RANK_MASK = 0b1111111111111n;
-
-const CARD_BIT_WIDTH = 4n;
-const CARD_5_BIT_SHIFT = 0n;
-const CARD_4_BIT_SHIFT = CARD_BIT_WIDTH + CARD_5_BIT_SHIFT; // 4n
-const CARD_3_BIT_SHIFT = CARD_BIT_WIDTH + CARD_4_BIT_SHIFT; // 8n
-const CARD_2_BIT_SHIFT = CARD_BIT_WIDTH + CARD_3_BIT_SHIFT; // 12n
-const CARD_1_BIT_SHIFT = CARD_BIT_WIDTH + CARD_2_BIT_SHIFT; // 16n
-const HAND_MASK_BIT_SHIFT = 24n;
-
-const CARD_MASK = 0x0fn;
-const CARD_1_MASK = 0x000f0000n;
-const CARD_2_MASK = 0x0000f000n;
-const CARD_5_MASK = 0x0000000fn;
-
-const HAND_MASK_HIGH_CARD = BigInt(HandStrength.HighCard) << HAND_MASK_BIT_SHIFT;
-const HAND_MASK_ONE_PAIR = BigInt(HandStrength.OnePair) << HAND_MASK_BIT_SHIFT;
-const HAND_MASK_TWO_PAIR = BigInt(HandStrength.TwoPair) << HAND_MASK_BIT_SHIFT;
-const HAND_MASK_THREE_OF_A_KIND = BigInt(HandStrength.ThreeOfAKind) << HAND_MASK_BIT_SHIFT;
-const HAND_MASK_STRAIGHT = BigInt(HandStrength.Straight) << HAND_MASK_BIT_SHIFT;
-const HAND_MASK_FLUSH = BigInt(HandStrength.Flush) << HAND_MASK_BIT_SHIFT;
-const HAND_MASK_FULL_HOUSE = BigInt(HandStrength.FullHouse) << HAND_MASK_BIT_SHIFT;
-const HAND_MASK_FOUR_OF_A_KIND = BigInt(HandStrength.FourOfAKind) << HAND_MASK_BIT_SHIFT;
-const HAND_MASK_STRAIGHT_FLUSH = BigInt(HandStrength.StraightFlush) << HAND_MASK_BIT_SHIFT;
 
 const uniq = <T>(items: T[]) => Array.from(new Set(items));
 
@@ -122,140 +91,6 @@ const getAllHandCombinations = ({
   const longestCombination = max(allHandCombinations.map((cards) => cards.length));
 
   return allHandCombinations.filter((cards) => cards.length === longestCombination);
-};
-
-// Returns a bit-mask representing the strength of the best possible hand from the provided cards.
-const getEffectiveHandMask = (cards: Card[]): bigint => {
-  const handMask = getHandMask(cards);
-  let retval = 0n;
-
-  // seperate out by suit
-  const sc = (handMask >> MASK_OFFSET_CLUBS) & RANK_MASK;
-  const sd = (handMask >> MASK_OFFSET_DIAMONDS) & RANK_MASK;
-  const sh = (handMask >> MASK_OFFSET_HEARTS) & RANK_MASK;
-  const ss = (handMask >> MASK_OFFSET_SPADES) & RANK_MASK;
-
-  const ranks = sc | sd | sh | ss;
-  const ranksCount = BITS_TABLE[bigintKey(ranks)];
-  const possibleDuplicatesCount = cards.length - ranksCount;
-
-  // Check for straight, flush, or straight flush, and return if we can
-  // determine immediately that that this is the best possible hand.
-  if (ranksCount >= 5) {
-    // Check for flush.
-    // TODO: This approach won't work for games with many cards per hand, such as 5-card omaha,
-    //       since such a hand could have multiple flushes.
-    const matchingMask = [ss, sc, sd, sh].find((mask) => BITS_TABLE[bigintKey(mask)] >= 5);
-    if (matchingMask !== undefined) {
-      const st = STRAIGHT_TABLE[bigintKey(matchingMask)];
-      if (st !== 0n) {
-        return HAND_MASK_STRAIGHT_FLUSH + (st << CARD_1_BIT_SHIFT);
-      }
-      retval = HAND_MASK_FLUSH + TOP_FIVE_CARDS_TABLE[bigintKey(matchingMask)];
-    } else {
-      const st = STRAIGHT_TABLE[bigintKey(ranks)];
-      if (st !== 0n) {
-        retval = HAND_MASK_STRAIGHT + (st << CARD_1_BIT_SHIFT);
-      }
-    }
-
-    // Another win -- if there can't be a FH/Quads (n_dups < 3), which is true most of the time
-    // when there is a made hand, then if we've found a five card hand, just return.  This skips
-    // the whole process of computing two-mask/three-mask/etc.
-    if (retval !== 0n && possibleDuplicatesCount < 3) {
-      return retval;
-    }
-  }
-
-  // By the time we're here, either:
-  //  1. there's no five-card hand possible (flush or straight), or
-  //  2. there's a flush or straight, but we know that there are enough
-  //     duplicates to make a full house / quads possible.
-  switch (possibleDuplicatesCount) {
-    case 0:
-      // It's a no-pair hand.
-      return HAND_MASK_HIGH_CARD + TOP_FIVE_CARDS_TABLE[bigintKey(ranks)];
-    case 1: {
-      // It's a one-pair hand.
-      const twoMask = ranks ^ (sc ^ sd ^ sh ^ ss);
-
-      retval = uint(HAND_MASK_ONE_PAIR + (TOP_CARD_TABLE[bigintKey(twoMask)] << CARD_1_BIT_SHIFT));
-      const t = ranks ^ twoMask; // Only one bit set in twoMask
-      // Get the top five cards in what is left, drop all but the top three
-      // cards, and shift them by one to get the three desired kickers.
-      const kickers = (TOP_FIVE_CARDS_TABLE[bigintKey(t)] >> CARD_BIT_WIDTH) & ~CARD_5_MASK;
-      retval += kickers;
-      return retval;
-    }
-    case 2: {
-      // Either two pair or trips.  Check two pair first.
-      const twoMask = ranks ^ (sc ^ sd ^ sh ^ ss);
-      if (twoMask !== 0n) {
-        const t = ranks ^ twoMask; // Exactly two bits set in twoMask
-        return uint(
-          HAND_MASK_TWO_PAIR +
-            (TOP_FIVE_CARDS_TABLE[bigintKey(twoMask)] & (CARD_1_MASK | CARD_2_MASK)) +
-            (TOP_CARD_TABLE[bigintKey(t)] << CARD_3_BIT_SHIFT),
-        );
-      }
-      // Must be trips.
-      const threeMask = ((sc & sd) | (sh & ss)) & ((sc & sh) | (sd & ss));
-      retval = uint(
-        HAND_MASK_THREE_OF_A_KIND + (TOP_CARD_TABLE[bigintKey(threeMask)] << CARD_1_BIT_SHIFT),
-      );
-      let t = ranks ^ threeMask; // Only one bit set in threeMask
-      const second = TOP_CARD_TABLE[bigintKey(t)];
-      retval += second << CARD_2_BIT_SHIFT;
-      t ^= 1n << second;
-      retval += uint(TOP_CARD_TABLE[bigintKey(t)] << CARD_3_BIT_SHIFT);
-      return retval;
-    }
-    default: {
-      // Possible quads, fullhouse, straight or flush, or two pair
-      const fourMask = sh & sd & sc & ss;
-      if (fourMask !== 0n) {
-        const tc = TOP_CARD_TABLE[bigintKey(fourMask)];
-        retval = uint(
-          HAND_MASK_FOUR_OF_A_KIND +
-            (tc << CARD_1_BIT_SHIFT) +
-            (TOP_CARD_TABLE[bigintKey(ranks ^ (1n << tc))] << CARD_2_BIT_SHIFT),
-        );
-        return retval;
-      }
-
-      // Technically, `threeMask` as defined below is really the set of bits that are set in three
-      // or four of the suits, but since we've already eliminated quads, this is okay.  Similarly,
-      // `twoMask` really represents two or four of the suits, but since we've already eliminated
-      // quads, we can use this shortcut.
-      const twoMask = ranks ^ (sc ^ sd ^ sh ^ ss);
-      if (BITS_TABLE[bigintKey(twoMask)] !== possibleDuplicatesCount) {
-        // Must be trips then, which really means there is a full house since we have 3+ duplicates.
-        const threeMask = ((sc & sd) | (sh & ss)) & ((sc & sh) | (sd & ss));
-        retval = HAND_MASK_FULL_HOUSE;
-        const tc = TOP_CARD_TABLE[bigintKey(threeMask)];
-        retval += tc << CARD_1_BIT_SHIFT;
-        const t = (twoMask | threeMask) ^ (1n << tc);
-        retval += uint(TOP_CARD_TABLE[bigintKey(t)] << CARD_2_BIT_SHIFT);
-        return retval;
-      }
-
-      if (retval !== 0n) {
-        // Flush and straight.
-        return retval;
-      }
-
-      // Must be two pair.
-      retval = HAND_MASK_TWO_PAIR;
-      const top = TOP_CARD_TABLE[bigintKey(twoMask)];
-      retval += top << CARD_1_BIT_SHIFT;
-      const second = TOP_CARD_TABLE[bigintKey(twoMask ^ (1n << top))];
-      retval += second << CARD_2_BIT_SHIFT;
-      retval += uint(
-        TOP_CARD_TABLE[bigintKey(ranks ^ (1n << top) ^ (1n << second))] << CARD_3_BIT_SHIFT,
-      );
-      return retval;
-    }
-  }
 };
 
 const take = <T>(array: T[], index: number): T => {
