@@ -105,4 +105,5 @@ const benchmarkOdds = (bench: Bench) => {
   await bench.run();
 
   console.table(bench.table());
+  console.table(bench.todos.map((todo) => ({ TODO: todo.name })));
 })();
