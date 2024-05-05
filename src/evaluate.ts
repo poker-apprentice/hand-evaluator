@@ -1,10 +1,25 @@
-import { Card, HandStrength, Rank, Suit, getRank, getSuit } from '@poker-apprentice/types';
+import { Card, Hand, HandStrength, getRank, getSuit } from '@poker-apprentice/types';
+import { assertNever } from 'assert-never';
+import findKey from 'lodash/findKey';
 import { compare } from './compare';
-import { rankOrder } from './constants';
+import {
+  CARD_1_BIT_SHIFT,
+  CARD_2_BIT_SHIFT,
+  CARD_3_BIT_SHIFT,
+  CARD_4_BIT_SHIFT,
+  CARD_5_BIT_SHIFT,
+  CARD_MASK,
+  HAND_MASK_BIT_SHIFT,
+} from './constants/bitmasks';
+import { CARD_RANK_TABLE } from './constants/cardRankTable';
+import { rankOrder } from './constants/rankOrder';
 import { EvaluatedHand } from './types';
-import { cardComparator } from './utils/cardComparator';
+import { bigintKey } from './utils/bigintKey';
 import { getCombinations } from './utils/getCombinations';
-import { handComparator } from './utils/handComparator';
+import { getHandMask } from './utils/getHandMask';
+import { getHandValueMask } from './utils/getHandValueMask';
+import { getMaskedCardRank } from './utils/getMaskedCardRank';
+import { getSuitedRankMasks } from './utils/getSuitedRankMasks';
 
 export interface EvaluateOptions {
   holeCards: Card[];
@@ -19,88 +34,6 @@ const uniq = <T>(items: T[]) => Array.from(new Set(items));
 
 const max = <T>(items: T[]) =>
   items.reduce((accum, current) => (current > accum ? current : accum));
-
-const getStraights = (cards: Card[]): Card[][] => {
-  const straights: Card[][] = [];
-
-  // allow ace to be treated as high or low
-  const lastAceIndex = cards.findLastIndex((card) => getRank(card) === 'A');
-  const adjustedCards =
-    lastAceIndex === -1 ? cards : [...cards, ...cards.slice(0, lastAceIndex + 1)];
-
-  for (let i = 0; i < adjustedCards.length - HAND_SIZE + 1; i += 1) {
-    const currentHands: Card[][] = [[adjustedCards[i]]];
-    for (let j = i + 1; j < adjustedCards.length; j += 1) {
-      const card = adjustedCards[j];
-      const rank = getRank(card);
-      const lastRank = getRank(currentHands[0][currentHands[0].length - 1]);
-
-      if (currentHands[0].length < HAND_SIZE) {
-        if (rank === lastRank) {
-          // If the current card is the same rank as the last card added, then append it
-          // to the list of possible hands.
-          const newHand = currentHands[0].slice(0, -1);
-          newHand.push(card);
-          currentHands.push(newHand);
-        } else if (rankOrder.indexOf(rank) === rankOrder.indexOf(lastRank) - 1) {
-          // If the current card is one rank lower than the last card, then append it
-          // to all possible hands.
-          currentHands.forEach((currentHand) => currentHand.push(card));
-        } else if (
-          rankOrder.indexOf(rank) === rankOrder.length - 1 &&
-          rankOrder.indexOf(lastRank) === 0
-        ) {
-          // If the current card is an ace, and the last card was a deuce, then append it
-          // to all possible hands.
-          currentHands.forEach((currentHand) => currentHand.push(card));
-        }
-      }
-    }
-    straights.push(...currentHands.filter((hand) => hand.length === HAND_SIZE));
-  }
-
-  // order straights from biggest to smallest
-  return straights.sort(handComparator);
-};
-
-const getDuplicates = (cards: Card[]): Map<Rank, Card[]> => {
-  const duplicates: Map<Rank, Card[]> = new Map();
-  cards.forEach((card) => {
-    const rank = getRank(card);
-    const current = duplicates.get(rank) ?? [];
-    current.push(card);
-    duplicates.set(rank, current);
-  });
-  return duplicates;
-};
-
-const getCardsOfLength = <T>(cardGroups: Map<T, Card[]>, count: number): Card[][] => {
-  const values = [...cardGroups.values()];
-  return values.filter((cards) => cards.length === count).sort(handComparator);
-};
-
-const getFlushes = (cards: Card[]): Card[][] => {
-  const suitedCards: Map<Suit, Card[]> = new Map();
-  cards.forEach((card) => {
-    const suit = getSuit(card);
-    const current = suitedCards.get(suit) ?? [];
-    current.push(card);
-    suitedCards.set(suit, current);
-  });
-
-  // only use the first 5 cards of the same suit to make up a hand
-  suitedCards.forEach((current) => {
-    current.splice(HAND_SIZE);
-  });
-
-  // only return flushes made up of a legitimate hand size
-  return getCardsOfLength(suitedCards, HAND_SIZE);
-};
-
-const getKickers = (hand: Card[], allCards: Card[]) => {
-  const kickerCount = HAND_SIZE - hand.length;
-  return allCards.filter((card) => !hand.includes(card)).slice(0, kickerCount);
-};
 
 const getAllHandCombinations = ({
   holeCards,
@@ -164,76 +97,102 @@ const getAllHandCombinations = ({
   return allHandCombinations.filter((cards) => cards.length === longestCombination);
 };
 
-const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
-  const cards = unsortedCards.sort(cardComparator);
-  const straights = getStraights(cards);
+const take = <T>(array: T[], index: number): T => {
+  const [item] = array.splice(index, 1);
+  return item;
+};
 
-  // straight flush/royal flush
-  const straightFlushes = straights.filter((straight) => uniq(straight.map(getSuit)).length === 1);
-  if (straightFlushes.length > 0) {
-    const strength =
-      getRank(straightFlushes[0][0]) === 'A' ? HandStrength.RoyalFlush : HandStrength.StraightFlush;
-    return { strength, hand: straightFlushes[0] };
+const constructHand = (
+  cards: Card[],
+  cardMasks: bigint[],
+  maskIndices: [number, number, number, number, number],
+): Hand =>
+  maskIndices.reduce((result: Hand, maskIndex, i) => {
+    if (maskIndex >= 0) {
+      const cardMask = cardMasks[maskIndex];
+      const maskedCardRank = getMaskedCardRank(cardMask);
+      const cardIndex = cards.findIndex((card) => getRank(card) === maskedCardRank);
+      const card = take(cards, cardIndex);
+      if (card !== undefined) {
+        result.push(card);
+      }
+    } else {
+      const referencedCard = result[i - 1];
+      const referencedRank = rankOrder.indexOf(getRank(referencedCard));
+      const cardIndex = cards.findIndex(
+        (card) => getRank(card) === rankOrder.at((referencedRank + maskIndex + 13) % 13),
+      );
+      const card = take(cards, cardIndex);
+      if (card !== undefined) {
+        result.push(card);
+      }
+    }
+    return result;
+  }, []);
+
+const getHand = (
+  originalCards: Card[],
+  handMask: bigint,
+  handValueMask: bigint,
+  strength: HandStrength,
+): Hand => {
+  const cardMasks = [
+    (handValueMask >> CARD_1_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_2_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_3_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_4_BIT_SHIFT) & CARD_MASK,
+    (handValueMask >> CARD_5_BIT_SHIFT) & CARD_MASK,
+  ];
+
+  const suits = getSuitedRankMasks(handMask);
+  const flushSuit = findKey(suits, (v) => CARD_RANK_TABLE[bigintKey(v)] >= 5);
+  const cards = flushSuit
+    ? originalCards.filter((card) => getSuit(card) === flushSuit)
+    : originalCards;
+
+  switch (strength) {
+    case HandStrength.HighCard:
+      return constructHand(cards, cardMasks, [0, 1, 2, 3, 4]);
+    case HandStrength.OnePair:
+      return constructHand(cards, cardMasks, [0, 0, 1, 2, 3]);
+    case HandStrength.TwoPair:
+      return constructHand(cards, cardMasks, [0, 0, 1, 1, 2]);
+    case HandStrength.ThreeOfAKind:
+      return constructHand(cards, cardMasks, [0, 0, 0, 1, 2]);
+    case HandStrength.Straight:
+      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
+    case HandStrength.Flush:
+      return constructHand(cards, cardMasks, [0, 1, 2, 3, 4]);
+    case HandStrength.FullHouse:
+      return constructHand(cards, cardMasks, [0, 0, 0, 1, 1]);
+    case HandStrength.FourOfAKind:
+      return constructHand(cards, cardMasks, [0, 0, 0, 0, 1]);
+    case HandStrength.StraightFlush:
+      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
+    case HandStrength.RoyalFlush:
+      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
+    default:
+      return assertNever(strength);
   }
+};
 
-  const duplicates: Map<Rank, Card[]> = getDuplicates(cards);
+const getStrength = (handMask: bigint): HandStrength => {
+  const strength = Number(handMask >> HAND_MASK_BIT_SHIFT);
+  const highCardRank = getMaskedCardRank((handMask >> CARD_1_BIT_SHIFT) & CARD_MASK);
 
-  // four of a kind
-  const allQuads = getCardsOfLength(duplicates, 4);
-  if (allQuads.length > 0) {
-    const quads = allQuads[0];
-    const kickers = getKickers(quads, cards);
-    return { strength: HandStrength.FourOfAKind, hand: [...quads, ...kickers] };
+  if (strength === HandStrength.StraightFlush && highCardRank === 'A') {
+    return HandStrength.RoyalFlush;
   }
+  return strength;
+};
 
-  // full house (via trips and a pair)
-  const allTrips = getCardsOfLength(duplicates, 3);
-  const allPairs = getCardsOfLength(duplicates, 2);
+const evaluateHand = (cards: Card[]): EvaluatedHand => {
+  const handMask = getHandMask(cards);
+  const value = getHandValueMask(handMask);
+  const strength = getStrength(value);
+  const hand = getHand(cards, handMask, value, strength);
 
-  if (allTrips.length > 0 && allPairs.length > 0) {
-    return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allPairs[0]] };
-  }
-
-  // full house (via trips twice, which can happen on a board like KKK5 w/ pocket pair 55)
-  if (allTrips.length >= 2) {
-    allTrips.sort((a, b) => cardComparator(a[0], b[0]));
-    return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allTrips[1].slice(0, 2)] };
-  }
-
-  // flush
-  const flushes = getFlushes(cards);
-  if (flushes.length > 0) {
-    return { strength: HandStrength.Flush, hand: flushes[0] };
-  }
-
-  // straight
-  if (straights.length > 0) {
-    return { strength: HandStrength.Straight, hand: straights[0] };
-  }
-
-  // three of a kind
-  if (allTrips.length > 0) {
-    const trips = allTrips[0];
-    const kickers = getKickers(trips, cards);
-    return { strength: HandStrength.ThreeOfAKind, hand: [...trips, ...kickers] };
-  }
-
-  // two pair
-  if (allPairs.length >= 2) {
-    const twoPair = [...allPairs[0], ...allPairs[1]];
-    const kickers = getKickers(twoPair, cards);
-    return { strength: HandStrength.TwoPair, hand: [...twoPair, ...kickers] };
-  }
-
-  // one pair
-  if (allPairs.length > 0) {
-    const pair = allPairs[0];
-    const kickers = getKickers(pair, cards);
-    return { strength: HandStrength.OnePair, hand: [...pair, ...kickers] };
-  }
-
-  // high card
-  return { strength: HandStrength.HighCard, hand: getKickers([], cards) };
+  return { strength, hand, value };
 };
 
 export const evaluate = ({

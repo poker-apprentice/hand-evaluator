@@ -1,9 +1,8 @@
 import { EvaluatedHand } from './types';
-import { handComparator } from './utils/handComparator';
 
 export const compare = (a: EvaluatedHand, b: EvaluatedHand) => {
-  if (a.strength === b.strength) {
-    return handComparator(a.hand, b.hand);
+  if (a.value === b.value) {
+    return 0;
   }
-  return a.strength < b.strength ? 1 : -1;
+  return a.value < b.value ? 1 : -1;
 };
