@@ -29,7 +29,7 @@ describe('evaluate', () => {
   it('recognizes four of a kind', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', 'Qc', 'Qh'] })).toEqual({
       strength: HandStrength.FourOfAKind,
-      hand: ['Qc', 'Qd', 'Qh', 'Qs', 'As'],
+      hand: ['Qd', 'Qs', 'Qc', 'Qh', 'As'],
       value: 118145024n,
     });
   });
@@ -37,7 +37,7 @@ describe('evaluate', () => {
   it('recognizes full houses', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', 'Jc', 'Qh'] })).toEqual({
       strength: HandStrength.FullHouse,
-      hand: ['Qd', 'Qh', 'Qs', 'Jc', 'Js'],
+      hand: ['Qd', 'Qs', 'Qh', 'Js', 'Jc'],
       value: 101355520n,
     });
   });
@@ -45,7 +45,7 @@ describe('evaluate', () => {
   it('recognizes stronger full houses', () => {
     expect(evaluate({ holeCards: ['Js', 'Qd', 'Jc', 'Qs', 'Ac', 'Qh', 'Ah'] })).toEqual({
       strength: HandStrength.FullHouse,
-      hand: ['Qd', 'Qh', 'Qs', 'Ac', 'Ah'],
+      hand: ['Qd', 'Qs', 'Qh', 'Ac', 'Ah'],
       value: 101367808n,
     });
   });
@@ -60,7 +60,7 @@ describe('evaluate', () => {
       }),
     ).toEqual({
       strength: HandStrength.FullHouse,
-      hand: ['Kc', 'Kd', 'Kh', '5c', '5d'],
+      hand: ['Kc', 'Kd', 'Kh', '5d', '5c'],
       value: 101396480n,
     });
   });
@@ -92,7 +92,7 @@ describe('evaluate', () => {
   it('recognizes three of a kind', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', 'Qc', '2h'] })).toEqual({
       strength: HandStrength.ThreeOfAKind,
-      hand: ['Qc', 'Qd', 'Qs', 'As', 'Js'],
+      hand: ['Qd', 'Qs', 'Qc', 'As', 'Js'],
       value: 51038464n,
     });
   });
@@ -100,7 +100,7 @@ describe('evaluate', () => {
   it('recognizes two pair', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', '2h', 'Jh'] })).toEqual({
       strength: HandStrength.TwoPair,
-      hand: ['Qd', 'Qs', 'Jh', 'Js', 'As'],
+      hand: ['Qd', 'Qs', 'Js', 'Jh', 'As'],
       value: 34249728n,
     });
   });
@@ -171,7 +171,7 @@ describe('evaluate', () => {
       }),
     ).toEqual({
       strength: HandStrength.OnePair,
-      hand: ['Ad', 'As'],
+      hand: ['As', 'Ad'],
       value: 17563648n,
     });
   });

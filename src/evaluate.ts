@@ -1,11 +1,10 @@
 import { Card } from '@poker-apprentice/types';
-import maxBy from 'lodash/maxBy';
 import { EvaluatedHand } from './types';
 import { getCombinations } from './utils/getCombinations';
 import { getHandMask } from './utils/getHandMask';
 import { getHandValueMask } from './utils/getHandValueMask';
-import { getMaskedHand } from './utils/getMaskedHand';
-import { getMaskedHandStrength } from './utils/getMaskedHandStrength';
+import { unmaskHand } from './utils/unmaskHand';
+import { unmaskHandStrength } from './utils/unmaskHandStrength';
 
 export interface EvaluateOptions {
   holeCards: Card[];
@@ -83,7 +82,17 @@ const getAllHandCombinations = ({
   return allHandCombinations.filter((cards) => cards.length === longestCombination);
 };
 
-const getValue = ({ value }: { value: bigint }) => value;
+interface EvaluatedCombination {
+  cards: Card[];
+  mask: bigint;
+  value: bigint;
+}
+
+const evaluateCombination = (cards: Card[]): EvaluatedCombination => {
+  const mask = getHandMask(cards);
+  const value = getHandValueMask(mask);
+  return { cards, mask, value };
+};
 
 export const evaluate = ({
   holeCards,
@@ -117,15 +126,16 @@ export const evaluate = ({
     maximumHoleCards,
   });
 
-  const handsWithValues = allHandCombinations.map((hand) => {
-    const mask = getHandMask(hand);
-    const value = getHandValueMask(mask);
-    return { hand, mask, value };
-  });
+  let best = evaluateCombination(allHandCombinations[0]);
+  for (let i = 1; i < allHandCombinations.length; i += 1) {
+    const current = evaluateCombination(allHandCombinations[i]);
+    if (current.value > best.value) {
+      best = current;
+    }
+  }
 
-  const best = maxBy(handsWithValues, getValue)!;
-  const strength = getMaskedHandStrength(best.value);
-  const hand = getMaskedHand(best.mask, best.value, strength);
+  const strength = unmaskHandStrength(best.value);
+  const hand = unmaskHand(best.cards, best.mask, best.value, strength);
 
   return { strength, hand, value: best.value };
 };
