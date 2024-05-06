@@ -6,7 +6,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['Qh', 'Qd', 'Td', 'Qs', 'Kd', 'Ad', 'Jd'] })).toEqual({
       strength: HandStrength.RoyalFlush,
       hand: ['Ad', 'Kd', 'Qd', 'Jd', 'Td'],
-      value: 135004160n,
     });
   });
 
@@ -14,7 +13,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['Qh', 'Qd', 'Td', 'Qs', 'Kd', '9d', 'Jd'] })).toEqual({
       strength: HandStrength.StraightFlush,
       hand: ['Kd', 'Qd', 'Jd', 'Td', '9d'],
-      value: 134938624n,
     });
   });
 
@@ -22,7 +20,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['Qh', '5d', '2d', '3d', '8d', 'Ad', '4d'] })).toEqual({
       strength: HandStrength.StraightFlush,
       hand: ['5d', '4d', '3d', '2d', 'Ad'],
-      value: 134414336n,
     });
   });
 
@@ -30,7 +27,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', 'Qc', 'Qh'] })).toEqual({
       strength: HandStrength.FourOfAKind,
       hand: ['Qd', 'Qs', 'Qc', 'Qh', 'As'],
-      value: 118145024n,
     });
   });
 
@@ -38,7 +34,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', 'Jc', 'Qh'] })).toEqual({
       strength: HandStrength.FullHouse,
       hand: ['Qd', 'Qs', 'Qh', 'Js', 'Jc'],
-      value: 101355520n,
     });
   });
 
@@ -46,7 +41,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['Js', 'Qd', 'Jc', 'Qs', 'Ac', 'Qh', 'Ah'] })).toEqual({
       strength: HandStrength.FullHouse,
       hand: ['Qd', 'Qs', 'Qh', 'Ac', 'Ah'],
-      value: 101367808n,
     });
   });
 
@@ -61,7 +55,6 @@ describe('evaluate', () => {
     ).toEqual({
       strength: HandStrength.FullHouse,
       hand: ['Kc', 'Kd', 'Kh', '5d', '5c'],
-      value: 101396480n,
     });
   });
 
@@ -69,7 +62,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['Js', 'Qd', '8s', '4s', '6c', 'Qs', 'As'] })).toEqual({
       strength: HandStrength.Flush,
       hand: ['As', 'Qs', 'Js', '8s', '4s'],
-      value: 84715874n,
     });
   });
 
@@ -77,7 +69,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['Qh', 'Qd', 'Td', 'Qs', 'Kh', '9d', 'Jc'] })).toEqual({
       strength: HandStrength.Straight,
       hand: ['Kh', 'Qh', 'Jc', 'Td', '9d'],
-      value: 67829760n,
     });
   });
 
@@ -85,7 +76,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['Qh', '5d', '2h', '3d', '8c', 'As', '4d'] })).toEqual({
       strength: HandStrength.Straight,
       hand: ['5d', '4d', '3d', '2h', 'As'],
-      value: 67305472n,
     });
   });
 
@@ -93,7 +83,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', 'Qc', '2h'] })).toEqual({
       strength: HandStrength.ThreeOfAKind,
       hand: ['Qd', 'Qs', 'Qc', 'As', 'Js'],
-      value: 51038464n,
     });
   });
 
@@ -101,7 +90,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', '2h', 'Jh'] })).toEqual({
       strength: HandStrength.TwoPair,
       hand: ['Qd', 'Qs', 'Js', 'Jh', 'As'],
-      value: 34249728n,
     });
   });
 
@@ -109,7 +97,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', 'Qs', '2h', '3h'] })).toEqual({
       strength: HandStrength.OnePair,
       hand: ['Qd', 'Qs', 'As', 'Js', '3h'],
-      value: 17484048n,
     });
   });
 
@@ -117,7 +104,6 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['As', 'Qd', 'Js', '8s', '2h', '3h'] })).toEqual({
       strength: HandStrength.HighCard,
       hand: ['As', 'Qd', 'Js', '8s', '3h'],
-      value: 829793n,
     });
   });
 
@@ -132,7 +118,6 @@ describe('evaluate', () => {
       expect(omahaHand).toEqual({
         strength: HandStrength.Straight,
         hand: ['5d', '4s', '3d', '2s', 'As'],
-        value: 67305472n,
       });
     });
 
@@ -145,7 +130,6 @@ describe('evaluate', () => {
       expect(pineappleHand).toEqual({
         strength: HandStrength.HighCard,
         hand: ['Jc', 'Tc', '9h', '8c', '2d'],
-        value: 624480n,
       });
     });
   });
@@ -160,7 +144,6 @@ describe('evaluate', () => {
     ).toEqual({
       strength: HandStrength.HighCard,
       hand: ['Kh', 'Jc'],
-      value: 757760n,
     });
 
     expect(
@@ -172,7 +155,6 @@ describe('evaluate', () => {
     ).toEqual({
       strength: HandStrength.OnePair,
       hand: ['As', 'Ad'],
-      value: 17563648n,
     });
   });
 });

@@ -9,10 +9,12 @@ import {
   CARD_MASK,
 } from '../constants/bitmasks';
 import { rankOrder } from '../constants/rankOrder';
+import { EvaluatedHand } from '../types';
 import { findKey } from './findKey';
 import { getRankMask } from './getHandMask';
 import { getMaskedCardRank } from './getMaskedCardRank';
 import { getSuitedRankMasks } from './getSuitedRankMasks';
+import { unmaskHandStrength } from './unmaskHandStrength';
 
 const combineCardMasks = (acc: bigint, cardMask: bigint) =>
   acc | getRankMask(getMaskedCardRank(cardMask));
@@ -54,8 +56,9 @@ export const unmaskHand = (
   cards: Card[],
   handMask: bigint,
   handValueMask: bigint,
-  strength: HandStrength,
-): Hand => {
+): EvaluatedHand => {
+  const strength = unmaskHandStrength(handValueMask);
+
   const cardMasks = [
     (handValueMask >> CARD_1_BIT_SHIFT) & CARD_MASK,
     (handValueMask >> CARD_2_BIT_SHIFT) & CARD_MASK,
@@ -75,25 +78,25 @@ export const unmaskHand = (
 
   switch (strength) {
     case HandStrength.HighCard:
-      return constructHand(cards, cardMasks, [0, 1, 2, 3, 4]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, 1, 2, 3, 4]) };
     case HandStrength.OnePair:
-      return constructHand(cards, cardMasks, [0, 0, 1, 2, 3]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, 0, 1, 2, 3]) };
     case HandStrength.TwoPair:
-      return constructHand(cards, cardMasks, [0, 0, 1, 1, 2]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, 0, 1, 1, 2]) };
     case HandStrength.ThreeOfAKind:
-      return constructHand(cards, cardMasks, [0, 0, 0, 1, 2]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, 0, 0, 1, 2]) };
     case HandStrength.Straight:
-      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, -1, -1, -1, -1]) };
     case HandStrength.Flush:
-      return constructHand(cards, cardMasks, [0, 1, 2, 3, 4]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, 1, 2, 3, 4]) };
     case HandStrength.FullHouse:
-      return constructHand(cards, cardMasks, [0, 0, 0, 1, 1]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, 0, 0, 1, 1]) };
     case HandStrength.FourOfAKind:
-      return constructHand(cards, cardMasks, [0, 0, 0, 0, 1]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, 0, 0, 0, 1]) };
     case HandStrength.StraightFlush:
-      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, -1, -1, -1, -1]) };
     case HandStrength.RoyalFlush:
-      return constructHand(cards, cardMasks, [0, -1, -1, -1, -1]);
+      return { strength, hand: constructHand(cards, cardMasks, [0, -1, -1, -1, -1]) };
     default:
       return assertNever(strength);
   }

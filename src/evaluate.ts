@@ -4,7 +4,6 @@ import { getCombinations } from './utils/getCombinations';
 import { getHandMask } from './utils/getHandMask';
 import { getHandValueMask } from './utils/getHandValueMask';
 import { unmaskHand } from './utils/unmaskHand';
-import { unmaskHandStrength } from './utils/unmaskHandStrength';
 
 export interface EvaluateOptions {
   holeCards: Card[];
@@ -134,8 +133,5 @@ export const evaluate = ({
     }
   }
 
-  const strength = unmaskHandStrength(best.value);
-  const hand = unmaskHand(best.cards, best.mask, best.value, strength);
-
-  return { strength, hand, value: best.value };
+  return unmaskHand(best.cards, best.mask, best.value);
 };
