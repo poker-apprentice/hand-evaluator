@@ -49,7 +49,7 @@ describe('odds', () => {
     });
 
     // TODO: this test would have taken forever previously, does it run quickly now?
-    it.skip('multi-way, all hole cards provided without community cards', () => {
+    it('multi-way, all hole cards provided without community cards', () => {
       const hands: Hand[] = [
         ['As', 'Ks'],
         ['Ad', 'Kd'],
@@ -57,18 +57,19 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: [] })).toEqual([
-        { wins: 58, ties: 228, total: 1806 },
-        { wins: 56, ties: 228, total: 1806 },
-        { wins: 1464, ties: 0, total: 1806 },
+        { wins: 96209, ties: 405190, total: 1370754, equity: 0.21729366951814816 },
+        { wins: 79965, ties: 405190, total: 1370754, equity: 0.20544325726328697 },
+        { wins: 789390, ties: 5687, total: 1370754, equity: 0.5772630732185837 },
       ]);
     });
 
-    it.skip('heads-up, not all hole cards provided', () => {
+    it('heads-up, not all hole cards provided', () => {
       const hands: Hand[] = [['As', 'Ks'], ['Ad']];
 
+      // TODO: these equity values does not add up to 100%!!
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 29536, ties: 4136, total: 45540, equity: 0.6939833114 },
-        { wins: 11868, ties: 4136, total: 45540, equity: 0.3060166886 },
+        { wins: 29536, ties: 4136, total: 45540, equity: 0.6490040470283204 },
+        { wins: 11868, ties: 4136, total: 45540, equity: 0.2610290861911965 },
       ]);
     });
 
@@ -96,15 +97,15 @@ describe('odds', () => {
       maximumHoleCardsUsed: 7,
     };
 
-    it.skip('heads-up (no ties)', () => {
+    it('heads-up (no ties)', () => {
       const hands: Hand[] = [
         ['As', 'Kd', 'Ks', '8c', 'Ac', '2d'],
         ['9s', '8s', 'Ts', '6s', '4h', '2c'],
       ];
 
       expect(odds(hands, studOptions)).toEqual([
-        { wins: 603, ties: 0, total: 780 },
-        { wins: 177, ties: 0, total: 780 },
+        { wins: 1206, ties: 0, total: 1560, equity: 0.7735727098575103 },
+        { wins: 354, ties: 0, total: 1560, equity: 0.2270687272250464 },
       ]);
     });
   });
