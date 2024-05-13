@@ -65,10 +65,9 @@ describe('odds', () => {
     it('heads-up, not all hole cards provided', () => {
       const hands: Hand[] = [['As', 'Ks'], ['Ad']];
 
-      // TODO: these equity values does not add up to 100%!!
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 29536, ties: 4136, total: 45540, equity: 0.6490040470283204 },
-        { wins: 11868, ties: 4136, total: 45540, equity: 0.2610290861911965 },
+        { wins: 29536, ties: 4136, total: 45540, equity: 0.6939833113746158 },
+        { wins: 11868, ties: 4136, total: 45540, equity: 0.3060166886253843 },
       ]);
     });
 
@@ -103,8 +102,44 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, studOptions)).toEqual([
-        { wins: 1206, ties: 0, total: 1560, equity: 0.7735727098575103 },
-        { wins: 354, ties: 0, total: 1560, equity: 0.2270687272250464 },
+        { wins: 1206, ties: 0, total: 1560, equity: 0.7730769230769231 },
+        { wins: 354, ties: 0, total: 1560, equity: 0.22692307692307692 },
+      ]);
+    });
+  });
+
+  describe('game requires a specific number of hole cards to be used', () => {
+    const omahaOptions = {
+      communityCards: [],
+      expectedCommunityCardCount: 5,
+      expectedHoleCardCount: 4,
+      minimumHoleCardsUsed: 2,
+      maximumHoleCardsUsed: 2,
+    };
+
+    // TODO: enable this once implementation works
+    it.skip('heads-up, all hole cards provided', () => {
+      const hands: Hand[] = [
+        ['As', 'Ks', 'Kh', 'Tc'],
+        ['Ad', 'Kd', 'Qd', 'Js'],
+      ];
+
+      expect(odds(hands, { ...omahaOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
+        { wins: 45, ties: 900, total: 990, equity: 0.5 },
+        { wins: 45, ties: 900, total: 990, equity: 0.5 },
+      ]);
+    });
+
+    // TODO: enable this once implementation works
+    it.skip('heads-up, all hole cards provided without community cards', () => {
+      const hands: Hand[] = [
+        ['As', 'Ks', 'Kh', 'Tc'],
+        ['Ad', 'Kd', 'Qc', 'Jc'],
+      ];
+
+      expect(odds(hands, { ...omahaOptions, communityCards: [] })).toEqual([
+        { wins: 45, ties: 900, total: 990, equity: 0.5 },
+        { wins: 45, ties: 900, total: 990, equity: 0.5 },
       ]);
     });
   });
