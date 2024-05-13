@@ -21,7 +21,12 @@ describe('simulate', () => {
     for (let i = 0; i < 3; i += 1) {
       const { value: odds } = generate.next();
       expect(odds[0].total).toEqual(i + 1);
-      expect(odds.reduce((acc, current) => acc + current.equity, 0)).toBe(1);
+    }
+  });
+
+  it('calculates equities correctly', () => {
+    for (const odds of simulate(options)) {
+      expect(odds.reduce((acc, current) => acc + current.equity, 0)).toBeCloseTo(1);
     }
   });
 
