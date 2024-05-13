@@ -48,7 +48,6 @@ describe('odds', () => {
       ]);
     });
 
-    // TODO: this test would have taken forever previously, does it run quickly now?
     it('multi-way, all hole cards provided without community cards', () => {
       const hands: Hand[] = [
         ['As', 'Ks'],
