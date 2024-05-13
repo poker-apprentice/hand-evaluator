@@ -118,16 +118,13 @@ const generate = simulate({
   maximumHoleCardsUsed: 2,
 });
 
-let result = generate.next();
-while (!result.done) {
+for (const result of generate) {
   const hand1WinPercent = ((result[0].wins / result[0].total) * 100).toFixed(1);
 
   // Output the cumulative results every 500 runs.
   if (result[0].total % 500 === 0) {
     console.log(hand1WinPercent, result);
   }
-
-  result = generate.next();
 }
 
 // => "13.8" [{ wins: 69, ties: 0, total: 500 }, { wins: 431, ties: 0, total: 500 }]

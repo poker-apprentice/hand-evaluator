@@ -45,6 +45,6 @@ export const evaluateScenario = (
     wins: bestHandIndices.has(index) && !isTie ? 1 : 0,
     ties: bestHandIndices.has(index) && isTie ? 1 : 0,
     total: 1,
-    equity,
+    equity: bestHandIndices.has(index) ? equity : 0,
   }));
 };

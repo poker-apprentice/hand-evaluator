@@ -62,10 +62,12 @@ export function* simulate({
 
     for (let index = 0; index < scenarioEvaluations.length; index += 1) {
       const evaluation = scenarioEvaluations[index];
+      results[index].equity =
+        (results[index].equity * results[index].total + evaluation.equity) /
+        (results[index].total + evaluation.total);
       results[index].wins += evaluation.wins;
       results[index].ties += evaluation.ties;
       results[index].total += evaluation.total;
-      results[index].equity += evaluation.equity;
     }
 
     if (remainingCardPermutations.length >= 0) {
