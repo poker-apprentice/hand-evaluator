@@ -39,10 +39,12 @@ export const evaluateScenario = (
   }, new Set([0]));
 
   const isTie = bestHandIndices.size > 1;
+  const equity = isTie ? 1 / bestHandIndices.size : 1;
 
   return scenario.allHoleCards.map((_holeCards, index) => ({
     wins: bestHandIndices.has(index) && !isTie ? 1 : 0,
     ties: bestHandIndices.has(index) && isTie ? 1 : 0,
     total: 1,
+    equity: bestHandIndices.has(index) ? equity : 0,
   }));
 };

@@ -100,6 +100,13 @@ describe('evaluate', () => {
     });
   });
 
+  it('recognizes high card', () => {
+    expect(evaluate({ holeCards: ['As', 'Qd', 'Js', '8s', '2h', '3h'] })).toEqual({
+      strength: HandStrength.HighCard,
+      hand: ['As', 'Qd', 'Js', '8s', '3h'],
+    });
+  });
+
   describe('minimum & maximum hole cards', () => {
     it('handles minimum & maximum as the same value', () => {
       const omahaHand = evaluate({

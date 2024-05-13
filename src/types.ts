@@ -9,4 +9,5 @@ export interface Odds {
   wins: number;
   ties: number;
   total: number;
+  equity: number;
 }

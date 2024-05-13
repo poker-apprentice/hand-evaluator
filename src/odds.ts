@@ -1,80 +1,94 @@
 import { Card, Hand } from '@poker-apprentice/types';
 import { Odds } from './types';
-import { buildScenario } from './utils/buildScenario';
-import { Scenario, evaluateScenario } from './utils/evaluateScenario';
-import { getPermutations } from './utils/getPermutations';
-import { getRemainingCardCount } from './utils/getRemainingCardCount';
-import { getRemainingCards } from './utils/getRemainingCards';
+import { getHandMask } from './utils/getHandMask';
+import { getHandValueMask } from './utils/getHandValueMask';
+import { iterateCardMasks } from './utils/iterateCardMasks';
+import { iterateHoleCardMasks } from './utils/iterateHoleCardMasks';
 
 export interface OddsOptions {
   communityCards: Card[];
+  deadCards?: Card[];
   expectedCommunityCardCount: number;
   expectedHoleCardCount: number;
   minimumHoleCardsUsed: number;
   maximumHoleCardsUsed: number;
 }
 
-interface HelperOptions extends Omit<OddsOptions, 'minimumHoleCardsUsed' | 'maximumHoleCardsUsed'> {
-  allHoleCards: Hand[];
-  remainingCards: Card[];
-}
-
-const getAllScenarios = ({
-  allHoleCards,
-  communityCards,
-  expectedCommunityCardCount,
-  expectedHoleCardCount,
-  remainingCards,
-}: HelperOptions): Scenario[] => {
-  // Determine how many more cards need to be selected to fill any unspecified
-  // hole cards or community cards.
-  const remainingCardCount = getRemainingCardCount({
-    allHoleCards,
+export const odds = (
+  allHoleCards: Hand[],
+  {
     communityCards,
+    deadCards = [],
     expectedCommunityCardCount,
     expectedHoleCardCount,
-  });
+    // TODO: this implementation is not making use of `minimumHoleCardsUsed` or `maximumHoleCardsUsed`
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    minimumHoleCardsUsed,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    maximumHoleCardsUsed,
+  }: OddsOptions,
+): Odds[] => {
+  let total = 0;
 
-  // Get all permutations of remaining cards that can be used.  We want permutations rather than
-  // combinations because the results are different when a card ends up being treated as a hole
-  // card vs. community card.
-  const remainingCardPermutations = getPermutations(remainingCards, remainingCardCount);
+  const odds: Odds[] = allHoleCards.map(() => ({ wins: 0, ties: 0, total: 0, equity: 0 }));
 
-  if (remainingCardPermutations.length === 0) {
-    return [{ allHoleCards, communityCards }];
+  const initialDeadCardsMask = getHandMask([
+    ...allHoleCards.reduce((acc, cards) => [...acc, ...cards]),
+    ...communityCards,
+    ...deadCards,
+  ]);
+
+  for (const allHoleCardMasks of iterateHoleCardMasks(
+    allHoleCards.map(getHandMask),
+    initialDeadCardsMask,
+    expectedHoleCardCount,
+  )) {
+    const currentDeadCardsMask = allHoleCardMasks.reduce(
+      (acc, mask) => acc | mask,
+      initialDeadCardsMask,
+    );
+
+    for (const boardMask of iterateCardMasks(
+      getHandMask(communityCards),
+      currentDeadCardsMask,
+      expectedCommunityCardCount,
+    )) {
+      let handMask = allHoleCardMasks[0] | boardMask;
+      let bestHandValue = getHandValueMask(handMask);
+      let bestHandIndices = new Set([0]);
+
+      for (let i = 1; i < odds.length; i += 1) {
+        handMask = allHoleCardMasks[i] | boardMask;
+        const currentHandValue = getHandValueMask(handMask);
+        if (currentHandValue > bestHandValue) {
+          bestHandValue = currentHandValue;
+          bestHandIndices = new Set([i]);
+        } else if (currentHandValue === bestHandValue) {
+          bestHandIndices.add(i);
+        }
+      }
+
+      const isTie = bestHandIndices.size > 1;
+      const equity = isTie ? 1 / bestHandIndices.size : 1;
+      for (let i = 0; i < odds.length; i += 1) {
+        if (bestHandIndices.has(i)) {
+          if (isTie) {
+            odds[i].ties += 1;
+            odds[i].equity += equity;
+          } else {
+            odds[i].wins += 1;
+          }
+        }
+      }
+
+      total += 1;
+    }
   }
 
-  // Generate all possible hole card + community card scenarios based upon the remaining cards.
-  return remainingCardPermutations.reduce((scenarios: Scenario[], cards) => {
-    scenarios.push(
-      buildScenario({
-        allHoleCards,
-        communityCards,
-        expectedHoleCardCount,
-        selectedCards: cards,
-      }),
-    );
-    return scenarios;
-  }, []);
-};
+  for (let i = 0; i < odds.length; i += 1) {
+    odds[i].total = total;
+    odds[i].equity = (odds[i].wins + odds[i].equity) / odds[i].total;
+  }
 
-export const odds = (allHoleCards: Hand[], options: OddsOptions): Odds[] => {
-  const remainingCards = getRemainingCards(allHoleCards, options.communityCards);
-  const allScenarios = getAllScenarios({ ...options, allHoleCards, remainingCards });
-
-  // Call `evaluate` on every scenario, then use the `compare` function to determine the winner for
-  // each scenario.  Return an array of objects containing the counts of possible winning
-  // scenarios, tying scenarios, and total number of scenarios.
-  return allScenarios.reduce((accum: Odds[], scenario) => {
-    const scenarioEvaluations = evaluateScenario(scenario, {
-      minimumHoleCardsUsed: options.minimumHoleCardsUsed,
-      maximumHoleCardsUsed: options.maximumHoleCardsUsed,
-    });
-    scenarioEvaluations.forEach((evaluation, index) => {
-      accum[index].wins += evaluation.wins;
-      accum[index].ties += evaluation.ties;
-      accum[index].total += evaluation.total;
-    });
-    return accum;
-  }, allHoleCards.map(() => ({ wins: 0, ties: 0, total: 0 })) as Odds[]);
+  return odds;
 };

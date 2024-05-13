@@ -18,9 +18,16 @@ describe('simulate', () => {
 
   it('yields results the correct number of times', () => {
     const generate = simulate(options);
-    expect(generate.next().value[0].total).toEqual(1);
-    expect(generate.next().value[0].total).toEqual(2);
-    expect(generate.next().value[0].total).toEqual(3);
+    for (let i = 0; i < 3; i += 1) {
+      const { value: odds } = generate.next();
+      expect(odds[0].total).toEqual(i + 1);
+    }
+  });
+
+  it('calculates equities correctly', () => {
+    for (const odds of simulate(options)) {
+      expect(odds.reduce((acc, current) => acc + current.equity, 0)).toBeCloseTo(1);
+    }
   });
 
   it('returns after yielding the maximum number of possible times', () => {
