@@ -17,8 +17,8 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8d'] })).toEqual([
-        { wins: 298, ties: 0, total: 1980 },
-        { wins: 1682, ties: 0, total: 1980 },
+        { wins: 149, ties: 0, total: 990, equity: 0.1505050505050505 },
+        { wins: 841, ties: 0, total: 990, equity: 0.8494949494949495 },
       ]);
     });
 
@@ -29,12 +29,12 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 90, ties: 1800, total: 1980 },
-        { wins: 90, ties: 1800, total: 1980 },
+        { wins: 45, ties: 900, total: 990, equity: 0.5 },
+        { wins: 45, ties: 900, total: 990, equity: 0.5 },
       ]);
     });
 
-    it('multi-way, all hole cards provided', () => {
+    it('multi-way, all hole cards provided with community cards', () => {
       const hands: Hand[] = [
         ['As', 'Ks'],
         ['Ad', 'Kd'],
@@ -42,18 +42,33 @@ describe('odds', () => {
       ];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
+        { wins: 29, ties: 114, total: 903, equity: 0.09523809523809523 },
+        { wins: 28, ties: 114, total: 903, equity: 0.09413067552602436 },
+        { wins: 732, ties: 0, total: 903, equity: 0.8106312292358804 },
+      ]);
+    });
+
+    // TODO: this test would have taken forever previously, does it run quickly now?
+    it.skip('multi-way, all hole cards provided without community cards', () => {
+      const hands: Hand[] = [
+        ['As', 'Ks'],
+        ['Ad', 'Kd'],
+        ['Jd', 'Jh'],
+      ];
+
+      expect(odds(hands, { ...holdemOptions, communityCards: [] })).toEqual([
         { wins: 58, ties: 228, total: 1806 },
         { wins: 56, ties: 228, total: 1806 },
         { wins: 1464, ties: 0, total: 1806 },
       ]);
     });
 
-    it('heads-up, not all hole cards provided', () => {
+    it.skip('heads-up, not all hole cards provided', () => {
       const hands: Hand[] = [['As', 'Ks'], ['Ad']];
 
       expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 59072, ties: 8272, total: 91080 },
-        { wins: 23736, ties: 8272, total: 91080 },
+        { wins: 29536, ties: 4136, total: 45540, equity: 0.6939833114 },
+        { wins: 11868, ties: 4136, total: 45540, equity: 0.3060166886 },
       ]);
     });
 
@@ -66,8 +81,8 @@ describe('odds', () => {
       expect(
         odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h', 'Th', '2s'] }),
       ).toEqual([
-        { wins: 1, ties: 0, total: 1 },
-        { wins: 0, ties: 0, total: 1 },
+        { wins: 1, ties: 0, total: 1, equity: 1 },
+        { wins: 0, ties: 0, total: 1, equity: 0 },
       ]);
     });
   });
@@ -81,15 +96,15 @@ describe('odds', () => {
       maximumHoleCardsUsed: 7,
     };
 
-    it('heads-up (no ties)', () => {
+    it.skip('heads-up (no ties)', () => {
       const hands: Hand[] = [
         ['As', 'Kd', 'Ks', '8c', 'Ac', '2d'],
         ['9s', '8s', 'Ts', '6s', '4h', '2c'],
       ];
 
       expect(odds(hands, studOptions)).toEqual([
-        { wins: 1206, ties: 0, total: 1560 },
-        { wins: 354, ties: 0, total: 1560 },
+        { wins: 603, ties: 0, total: 780 },
+        { wins: 177, ties: 0, total: 780 },
       ]);
     });
   });

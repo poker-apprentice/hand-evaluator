@@ -29,7 +29,7 @@ export function* simulate({
   minimumHoleCardsUsed,
   maximumHoleCardsUsed,
 }: SimulateOptions): Generator<Odds[], Odds[]> {
-  const results = allHoleCards.map(() => ({ wins: 0, ties: 0, total: 0 }));
+  const results: Odds[] = allHoleCards.map(() => ({ wins: 0, ties: 0, total: 0, equity: 0 }));
 
   const remainingCards = getRemainingCards(allHoleCards, communityCards);
 
@@ -65,6 +65,7 @@ export function* simulate({
       results[index].wins += evaluation.wins;
       results[index].ties += evaluation.ties;
       results[index].total += evaluation.total;
+      results[index].equity += evaluation.equity;
     }
 
     if (remainingCardPermutations.length >= 0) {

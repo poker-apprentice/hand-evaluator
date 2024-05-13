@@ -9,7 +9,7 @@ A collection of useful functions for determining the strongest possible hand giv
 The following types are defined & utilized by this package.
 
 - `EvaluatedHand`: An object representing the effective hand, strength, and calculated value, given a coordination of cards.
-- `Odds`: An object representing how a hand will perform given a scenario. Includes the number of `wins`, `ties`, and `total` possible outcomes.
+- `Odds`: An object representing how a hand will perform given a scenario. Includes the number of `wins`, `ties`, and `total` possible outcomes, as well as an `equity` percentage between 0-1.
 
 ### Core Functions
 
@@ -158,8 +158,8 @@ const result = odds([hand1, hand2], {
 
 console.log(result);
 // => [
-//      { wins: 304, ties: 0, total: 1980 },
-//      { wins: 1676, ties: 0, total: 1980 },
+//      { wins: 304, ties: 0, total: 1980, equity: 0.1535353535 },
+//      { wins: 1676, ties: 0, total: 1980, equity: 0.8464646465 },
 //    ]
 ```
 
