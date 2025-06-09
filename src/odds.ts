@@ -21,10 +21,7 @@ export const odds = (
     deadCards = [],
     expectedCommunityCardCount,
     expectedHoleCardCount,
-    // TODO: this implementation is not making use of `minimumHoleCardsUsed` or `maximumHoleCardsUsed`
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     minimumHoleCardsUsed,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     maximumHoleCardsUsed,
   }: OddsOptions,
 ): Odds[] => {

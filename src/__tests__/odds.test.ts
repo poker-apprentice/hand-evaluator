@@ -117,16 +117,15 @@ describe('odds', () => {
       maximumHoleCardsUsed: 2,
     };
 
-    // TODO: enable this once implementation works
-    it.skip('heads-up, all hole cards provided', () => {
+    it('heads-up, all hole cards provided', () => {
       const hands: Hand[] = [
         ['As', 'Ks', 'Kh', 'Tc'],
-        ['Ad', 'Kd', 'Qd', 'Js'],
+        ['Ad', 'Kd', 'Qc', 'Jc'],
       ];
 
       expect(odds(hands, { ...omahaOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
-        { wins: 45, ties: 900, total: 990, equity: 0.5 },
-        { wins: 45, ties: 900, total: 990, equity: 0.5 },
+        { wins: 15220, ties: 2811, total: 35640, equity: 0.46648428731762065 },
+        { wins: 17609, ties: 2811, total: 35640, equity: 0.5335157126823793 },
       ]);
     });
 
