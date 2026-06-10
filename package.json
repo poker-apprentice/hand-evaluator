@@ -1,6 +1,6 @@
 {
   "name": "@poker-apprentice/hand-evaluator",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Evaluate the strength of a hand of poker",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -32,12 +32,11 @@
     "test": "cross-env NODE_ENV=test jest",
     "test:profile": "cross-env PROFILE=true NODE_ENV=test jest",
     "benchmark": "./bin/benchmark",
-    "prepublishOnly": "yarn clean && yarn lint && yarn format && yarn test && yarn build"
+    "prepublishOnly": "yarn clean && yarn lint && yarn format && yarn test && yarn build",
+    "generate:tables": "ts-node scripts/generateTables.ts && prettier --write src/core/tables/tables.generated.ts"
   },
   "dependencies": {
-    "@poker-apprentice/types": "^1.4.0",
-    "lodash": "^4.17.21",
-    "v8-profiler-next": "^1.10.0"
+    "@poker-apprentice/types": "^1.4.0"
   },
   "devDependencies": {
     "@babel/plugin-transform-runtime": "^7.22.15",
@@ -49,7 +48,7 @@
     "@rollup/plugin-node-resolve": "^15.2.1",
     "@rollup/plugin-terser": "^0.4.3",
     "@types/jest": "^29.2.4",
-    "@types/lodash": "^4.14.191",
+    "@types/node": "^22.10.0",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",
     "babel-jest": "^29.3.1",
@@ -65,10 +64,11 @@
     "rimraf": "^5.0.5",
     "rollup": "^3.29.1",
     "tinybench": "^2.8.0",
-    "ts-jest": "^29.0.3",
+    "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^4.9.4"
+    "typescript": "^5.9.3",
+    "v8-profiler-next": "^1.10.0"
   }
 }

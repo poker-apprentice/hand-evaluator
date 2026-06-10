@@ -1,5 +1,8 @@
 import { HandStrength } from '@poker-apprentice/types';
+import { compare } from '../compare';
+import { idToCard } from '../core/cards';
 import { evaluate } from '../evaluate';
+import { referenceBest, referenceEvaluate } from './fixtures/referenceEvaluate';
 
 describe('evaluate', () => {
   it('recognizes royal flushes', () => {
@@ -13,6 +16,15 @@ describe('evaluate', () => {
     expect(evaluate({ holeCards: ['Qh', 'Qd', 'Td', 'Qs', 'Kd', '9d', 'Jd'] })).toEqual({
       strength: HandStrength.StraightFlush,
       hand: ['Kd', 'Qd', 'Jd', 'Td', '9d'],
+    });
+  });
+
+  it('recognizes straight flushes obscured by a duplicate-rank card (v3 bug)', () => {
+    // v3 reported a flush here: its straight detection dropped the 9h variant because the
+    // run K-Q-J-T had already been completed by the 9d.
+    expect(evaluate({ holeCards: ['3s', 'Jh', 'Th', 'Qh', '9d', 'Kh', '9h'] })).toEqual({
+      strength: HandStrength.StraightFlush,
+      hand: ['Kh', 'Qh', 'Jh', 'Th', '9h'],
     });
   });
 
@@ -125,6 +137,48 @@ describe('evaluate', () => {
         hand: ['Jc', 'Tc', '9h', '8c', '2d'],
       });
     });
+  });
+
+  describe('cross-validation against the frozen v3 evaluator', () => {
+    // Deterministic PRNG so failures are reproducible.
+    const mulberry32 = (seed: number) => {
+      let state = seed;
+      return () => {
+        state |= 0;
+        state = (state + 0x6d2b79f5) | 0;
+        let t = Math.imul(state ^ (state >>> 15), 1 | state);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    };
+
+    it.each([5, 6, 7])(
+      'agrees on random %i-card hands',
+      (size) => {
+        const random = mulberry32(0xd15ea5e + size);
+        const deck = Array.from({ length: 52 }, (_, id) => id);
+        for (let iteration = 0; iteration < 10000; iteration += 1) {
+          for (let i = 0; i < size; i += 1) {
+            const j = i + Math.floor(random() * (52 - i));
+            const swap = deck[i];
+            deck[i] = deck[j];
+            deck[j] = swap;
+          }
+          const cards = deck.slice(0, size).map(idToCard);
+
+          const actual = evaluate({ holeCards: cards });
+          // For more than 5 cards the oracle's returned card set may differ among
+          // equally-strong suit variants, so equality is asserted via `compare`.
+          const expected = size === 5 ? referenceEvaluate(cards) : referenceBest(cards);
+          expect(actual.strength).toBe(expected.strength);
+          expect(compare(actual, expected)).toBe(0);
+          if (size === 5) {
+            expect(actual.hand).toEqual(expected.hand);
+          }
+        }
+      },
+      30000,
+    );
   });
 
   it('allows fewer cards than 5 total cards', () => {

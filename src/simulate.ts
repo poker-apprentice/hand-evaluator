@@ -1,10 +1,6 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { createEngine } from './core/enumerate';
 import { Odds } from './types';
-import { buildScenario } from './utils/buildScenario';
-import { evaluateScenario } from './utils/evaluateScenario';
-import { getPermutations } from './utils/getPermutations';
-import { getRemainingCardCount } from './utils/getRemainingCardCount';
-import { getRemainingCards } from './utils/getRemainingCards';
 
 export interface SimulateOptions {
   allHoleCards: Hand[];
@@ -13,66 +9,30 @@ export interface SimulateOptions {
   expectedHoleCardCount: number;
   minimumHoleCardsUsed: number;
   maximumHoleCardsUsed: number;
+  /** Number of random scenarios to evaluate between yields (default 1). */
+  samplesPerUpdate?: number;
 }
 
 /**
- * TODO
- * @param {SimulateOptions} options Options for Monte Carlo simulation.
- * @yields {Odds[]} The combined odds of all simulations run against the provided options.
- * @returns {Odds[]} The combined odds of all simulations run against the provided options.
+ * Approximates the odds of each hand winning via Monte Carlo simulation, repeatedly dealing
+ * the not-yet-dealt cards uniformly at random and evaluating every hand.  Unlike `odds`, the
+ * generator never exhausts: consumers decide when the accumulated `total` (and therefore the
+ * accuracy of `equity`) is sufficient and stop iterating.
+ * @param {SimulateOptions} options The hands to compare and game rules to apply.
+ * @yields {Odds[]} The accumulated odds of all simulated scenarios so far.
+ * @returns {Odds[]} The accumulated odds of all simulated scenarios.
  */
 export function* simulate({
   allHoleCards,
-  communityCards,
-  expectedCommunityCardCount,
-  expectedHoleCardCount,
-  minimumHoleCardsUsed,
-  maximumHoleCardsUsed,
+  samplesPerUpdate = 1,
+  ...options
 }: SimulateOptions): Generator<Odds[], Odds[]> {
-  const results = allHoleCards.map(() => ({ wins: 0, ties: 0, total: 0 }));
+  const engine = createEngine(allHoleCards, options);
 
-  const remainingCards = getRemainingCards(allHoleCards, communityCards);
-
-  // Determine how many more cards need to be selected to fill any unspecified
-  // hole cards or community cards.
-  const remainingCardCount = getRemainingCardCount({
-    allHoleCards,
-    communityCards,
-    expectedCommunityCardCount,
-    expectedHoleCardCount,
-  });
-
-  const remainingCardPermutations = getPermutations(remainingCards, remainingCardCount);
-
-  while (remainingCardPermutations.length > 0) {
-    const randomIndex = Math.floor(Math.random() * remainingCardPermutations.length);
-    const [cards] = remainingCardPermutations.splice(randomIndex, 1);
-
-    const scenario = buildScenario({
-      allHoleCards,
-      communityCards,
-      expectedHoleCardCount,
-      selectedCards: cards,
-    });
-
-    const scenarioEvaluations = evaluateScenario(scenario, {
-      minimumHoleCardsUsed,
-      maximumHoleCardsUsed,
-    });
-
-    for (let index = 0; index < scenarioEvaluations.length; index += 1) {
-      const evaluation = scenarioEvaluations[index];
-      results[index].wins += evaluation.wins;
-      results[index].ties += evaluation.ties;
-      results[index].total += evaluation.total;
+  while (true) {
+    for (let i = 0; i < samplesPerUpdate; i += 1) {
+      engine.sample(Math.random);
     }
-
-    if (remainingCardPermutations.length >= 0) {
-      yield results;
-    } else {
-      return results;
-    }
+    yield engine.snapshot();
   }
-
-  return results;
 }

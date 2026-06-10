@@ -2,6 +2,17 @@
 
 A collection of useful functions for determining the strongest possible hand given a coordination of cards (hole cards & community cards), the strongest effective hand when comparing two hands, and the probability of winning the hand given what cards are known.
 
+## What's new in v4
+
+Version 4 replaces the hand-evaluation core with an integer-based, lookup-table evaluator and rewrites `odds` to enumerate card combinations instead of permutations. Exact odds calculations are now typically 100&times; or more faster, and previously infeasible calculations (such as exact preflop odds) complete in well under a second. Breaking changes:
+
+- **`Odds` totals are smaller (combination basis).** v3 counted every ordering of the unknown cards as a separate scenario; v4 counts every distinct combination once. All percentages are unchanged: every `wins`/`ties`/`total` value is simply divided by a constant factor.
+- **`Odds` includes an `equity` field**: the hand's share of the pot across all evaluated scenarios (ties split the pot), so each scenario's equities always sum to 1. Prefer `equity` over `wins / total` when ties matter.
+- **`odds` validates its input.** Duplicate cards and hands holding more cards than the game allows now throw instead of producing meaningless results.
+- **`odds` refuses unbounded work.** If a calculation would require more than `maximumEvaluations` hand evaluations (default 500 million), it throws; use `simulate` instead, or raise the limit.
+- **`simulate` is now an infinite generator.** It samples scenarios with replacement and never exhausts; consumers stop iterating when satisfied. A `samplesPerUpdate` option controls how many scenarios are evaluated per yield.
+- **A straight-flush detection bug is fixed.** v3 could report a flush for hands of 6+ cards containing a straight flush whose lowest card shared a rank with another card (e.g. `Kh Qh Jh Th 9h 9d 3s`).
+
 ## Usage
 
 ### Types
@@ -9,7 +20,7 @@ A collection of useful functions for determining the strongest possible hand giv
 The following types are defined & utilized by this package.
 
 - `EvaluatedHand`: An object representing the effective hand & strength, given a coordination of cards.
-- `Odds`: An object representing how a hand will perform given a scenario. Includes the number of `wins`, `ties`, and `total` possible outcomes.
+- `Odds`: An object representing how a hand will perform given a scenario. Includes the number of `wins`, `ties`, and `total` evaluated outcomes, plus the hand's overall pot `equity` (between 0 and 1, with tied outcomes contributing a partial share).
 
 ### Core Functions
 
@@ -101,7 +112,7 @@ const result = [
 
 Given a list of hands and community cards, estimate how often each hand will win or tie using a [Monte Carlo simulation](https://en.wikipedia.org/wiki/Monte_Carlo_method) for roughly estimating the odds of a hand winning or tying.
 
-The `simulate` [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction) returns a [generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator) that can be used to run as many Monte Carlo simulations as desired, limited by the maximum number of simulations that are possible for a given scenario based upon the provided inputs. (For example, if there are only 2 streets remaining to be dealt with 45 cards remaining in the deck, then there are 45 \* 44 = 1,980 possible simulations.)
+The `simulate` [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction) returns a [generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator) that yields cumulative results indefinitely; consumers decide when the accumulated sample count (and therefore the accuracy of `equity`) is sufficient and stop iterating. The accuracy of a Monte Carlo estimate improves with the square root of the sample count: 10,000 samples bound the standard error of `equity` to about half a percent. An optional `samplesPerUpdate` option (default 1) controls how many random scenarios are evaluated between yields.
 
 ```ts
 import { Hand, simulate } from '@poker-apprentice/hand-evaluator';
@@ -116,31 +127,26 @@ const generate = simulate({
   expectedHoleCardCount: 2,
   minimumHoleCardsUsed: 0,
   maximumHoleCardsUsed: 2,
+  samplesPerUpdate: 1000,
 });
 
-let result = generate.next();
-while (!result.done) {
-  const hand1WinPercent = ((result[0].wins / result[0].total) * 100).toFixed(1);
-
-  // Output the cumulative results every 500 runs.
-  if (result[0].total % 500 === 0) {
-    console.log(hand1WinPercent, result);
+for (const result of generate) {
+  console.log((result[0].equity * 100).toFixed(1), result);
+  if (result[0].total >= 3000) {
+    break;
   }
-
-  result = generate.next();
 }
 
-// => "13.8" [{ wins: 69, ties: 0, total: 500 }, { wins: 431, ties: 0, total: 500 }]
-// => "13.9" [{ wins: 139, ties: 0, total: 1000 }, { wins: 861, ties: 0, total: 1000 }]
-// => "15.4" [{ wins: 231, ties: 0, total: 1500 }, { wins: 1269, ties: 0, total: 1500 }]
-// => "14.8" [{ wins: 295, ties: 0, total: 2000 }, { wins: 1705, ties: 0, total: 2000 }]
+// => "13.8" [{ wins: 138, ties: 0, total: 1000, equity: 0.138 }, ...]
+// => "14.4" [{ wins: 288, ties: 0, total: 2000, equity: 0.144 }, ...]
+// => "15.1" [{ wins: 453, ties: 0, total: 3000, equity: 0.151 }, ...]
 ```
 
 #### `odds`
 
-Given a list of hands and community cards, determine how often each hand will win or tie.
+Given a list of hands and community cards, determine exactly how often each hand will win or tie by exhaustively enumerating every possible combination of the unknown cards (any unspecified hole cards plus the remaining community cards).
 
-Note: The implementation for this is exhaustive, and it is not practical for scenarios missing more than about 1-2 cards worth of data. It is strongly suggested that the [`simulate`](#simulate) function be used instead.
+Exact enumeration is fast enough for any hold'em scenario, including exact preflop odds, as well as omaha/pineapple/stud scenarios with a typical number of unknown cards. Because the work grows combinatorially with the number of unknown cards, `odds` throws if a calculation would require more than `maximumEvaluations` hand evaluations (500 million by default, roughly several seconds of computation); the [`simulate`](#simulate-alias-oddsasync) function handles such scenarios in bounded time instead.
 
 ```ts
 import { Hand, odds } from '@poker-apprentice/hand-evaluator';
@@ -158,8 +164,8 @@ const result = odds([hand1, hand2], {
 
 console.log(result);
 // => [
-//      { wins: 304, ties: 0, total: 1980 },
-//      { wins: 1676, ties: 0, total: 1980 },
+//      { wins: 149, ties: 0, total: 990, equity: 0.1505... },
+//      { wins: 841, ties: 0, total: 990, equity: 0.8494... },
 //    ]
 ```
 
@@ -334,30 +340,36 @@ const abort = simulateStud({
 
 ## Benchmarks
 
-Benchmarked on an Apple M1 MacBook Pro (2020) with 16 GB RAM using macOS Sonoma (14.4.1).
+Benchmarked on an Apple M3 Pro MacBook Pro with 36 GB RAM using macOS 26.3. The `rank 7-card hands x1000` entry measures the raw integer evaluation core: roughly 18 million 7-card evaluations per second.
 
 ```
-┌─────────┬─────────────────────────────────┬───────────┬────────────────────┬──────────┬─────────┐
-│ (index) │ Task Name                       │ ops/sec   │ Average Time (ns)  │ Margin   │ Samples │
-├─────────┼─────────────────────────────────┼───────────┼────────────────────┼──────────┼─────────┤
-│ 0       │ 'evaluate high card'            │ '355,417' │ 2813.5928118446004 │ '±1.07%' │ 177709  │
-│ 1       │ 'evaluate one pair'             │ '338,217' │ 2956.6739913315823 │ '±1.22%' │ 169109  │
-│ 2       │ 'evaluate two pair'             │ '332,969' │ 3003.276373247081  │ '±1.37%' │ 166485  │
-│ 3       │ 'evaluate three of a kind'      │ '356,214' │ 2807.2995373597214 │ '±1.39%' │ 178108  │
-│ 4       │ 'evaluate straight'             │ '293,999' │ 3401.3635219867597 │ '±1.27%' │ 147042  │
-│ 5       │ 'evaluate flush'                │ '234,729' │ 4260.22771695116   │ '±2.24%' │ 117365  │
-│ 6       │ 'evaluate full house'           │ '445,363' │ 2245.3578151797146 │ '±1.44%' │ 222682  │
-│ 7       │ 'evaluate four of a kind'       │ '435,199' │ 2297.794512868328  │ '±1.54%' │ 217600  │
-│ 8       │ 'evaluate straight flush'       │ '379,529' │ 2634.8410718516025 │ '±1.13%' │ 189765  │
-│ 9       │ 'evaluate royal flush'          │ '341,783' │ 2925.830758606707  │ '±1.42%' │ 170892  │
-│ 10      │ 'odds holdem heads up to flop'  │ '60'      │ 16660399.096774053 │ '±0.33%' │ 31      │
-│ 11      │ 'odds holdem heads up to turn'  │ '2,649'   │ 377453.67849057174 │ '±2.17%' │ 1325    │
-│ 12      │ 'odds holdem heads up to river' │ '107,341' │ 9316.064299157219  │ '±1.50%' │ 53671   │
-│ 13      │ 'odds holdem multiway to flop'  │ '39'      │ 25622593.799999684 │ '±0.21%' │ 20      │
-│ 14      │ 'odds holdem multiway to turn'  │ '1,597'   │ 625997.5319148765  │ '±2.03%' │ 799     │
-│ 15      │ 'odds holdem multiway to river' │ '59,267'  │ 16872.57771478776  │ '±1.56%' │ 29634   │
-└─────────┴─────────────────────────────────┴───────────┴────────────────────┴──────────┴─────────┘
+┌─────────┬─────────────────────────────────┬─────────────┬────────────────────┬──────────┬─────────┐
+│ (index) │ Task Name                       │ ops/sec     │ Average Time (ns)  │ Margin   │ Samples │
+├─────────┼─────────────────────────────────┼─────────────┼────────────────────┼──────────┼─────────┤
+│ 0       │ 'rank 7-card hands x1000'       │ '18,202'    │ 54936.632827950474 │ '±0.19%' │ 9102    │
+│ 1       │ 'evaluate high card'            │ '914,181'   │ 1093.8744429447363 │ '±0.43%' │ 457091  │
+│ 2       │ 'evaluate one pair'             │ '823,219'   │ 1214.7421612688306 │ '±0.40%' │ 411610  │
+│ 3       │ 'evaluate two pair'             │ '808,347'   │ 1237.092304304102  │ '±0.43%' │ 404174  │
+│ 4       │ 'evaluate three of a kind'      │ '843,451'   │ 1185.6051867810047 │ '±0.47%' │ 421726  │
+│ 5       │ 'evaluate straight'             │ '928,154'   │ 1077.4070458004828 │ '±0.35%' │ 464078  │
+│ 6       │ 'evaluate flush'                │ '657,305'   │ 1521.3636905792814 │ '±1.32%' │ 328653  │
+│ 7       │ 'evaluate full house'           │ '914,105'   │ 1093.9654722760874 │ '±0.57%' │ 457053  │
+│ 8       │ 'evaluate four of a kind'       │ '848,706'   │ 1178.2636642995465 │ '±0.73%' │ 424354  │
+│ 9       │ 'evaluate straight flush'       │ '937,862'   │ 1066.2542863348142 │ '±0.09%' │ 468932  │
+│ 10      │ 'evaluate royal flush'          │ '924,572'   │ 1081.5804035140118 │ '±0.09%' │ 462287  │
+│ 11      │ 'odds holdem heads up preflop'  │ '3'         │ 258745033.6        │ '±0.46%' │ 10      │
+│ 12      │ 'odds holdem heads up to flop'  │ '6,713'     │ 148946.85403633394 │ '±0.26%' │ 3357    │
+│ 13      │ 'odds holdem heads up to turn'  │ '139,049'   │ 7191.69599424761   │ '±0.30%' │ 69525   │
+│ 14      │ 'odds holdem heads up to river' │ '1,390,115' │ 719.3646012257714  │ '±0.51%' │ 695058  │
+│ 15      │ 'odds holdem multiway preflop'  │ '3'         │ 311137795.8999994  │ '±0.88%' │ 10      │
+│ 16      │ 'odds holdem multiway to flop'  │ '4,306'     │ 232224.59582374396 │ '±0.33%' │ 2155    │
+│ 17      │ 'odds holdem multiway to turn'  │ '84,077'    │ 11893.760888704976 │ '±0.26%' │ 42039   │
+│ 18      │ 'odds holdem multiway to river' │ '1,082,756' │ 923.5685942766954  │ '±0.50%' │ 541379  │
+└─────────┴─────────────────────────────────┴─────────────┴────────────────────┴──────────┴─────────┘
+odds omaha heads up preflop (single run): 136ms
 ```
+
+For comparison, v3 measured 60 ops/sec for `odds holdem heads up to flop` (now 6,266) and could not complete preflop calculations at all; exact heads-up preflop odds now take under 300ms.
 
 ## Development
 
@@ -424,6 +436,16 @@ yarn format
 ```
 yarn benchmark
 ```
+
+### Regenerate lookup tables
+
+The hand-rank lookup tables in `src/core/tables/tables.generated.ts` are checked in and rarely need to change. If the generator (`scripts/generateTables.ts`) is modified, regenerate them with:
+
+```
+yarn generate:tables
+```
+
+The generator validates itself: it asserts the canonical 7,462 hand equivalence classes, their category boundaries and frequencies, and that the perfect hash fills every table slot exactly once.
 
 ### Build package
 

@@ -1,0 +1,6 @@
+{
+  // Use the project's TypeScript for IDE language services so the editor typechecks with the
+  // same compiler version the build and tests use.
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
+}
