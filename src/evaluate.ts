@@ -2,9 +2,9 @@ import { Card } from '@poker-apprentice/types';
 import { compare } from './compare';
 import { handToIds } from './core/cards';
 import { GamePlan, compilePlan } from './core/plan';
-import { WORST_RANK, handStrengthFromRank, rankN } from './core/rank';
-import { evaluateHand, getAllHandCombinations } from './describe/legacyEvaluate';
+import { WORST_RANK, rankN } from './core/rank';
 import { EvaluatedHand } from './types';
+import { describeHand } from './utils/describeHand';
 import { getCombinations } from './utils/getCombinations';
 
 export interface EvaluateOptions {
@@ -16,11 +16,75 @@ export interface EvaluateOptions {
 
 const HAND_SIZE = 5;
 
-// v3 evaluation path: enumerate every candidate combination and describe each one.  Used when
-// the lookup-table core cannot apply: fewer than 5 total cards, or constraints under which
-// only partial (sub-5-card) hands can be formed.
-const evaluateLegacy = (options: Required<EvaluateOptions>): EvaluatedHand =>
-  getAllHandCombinations(options).map(evaluateHand).sort(compare)[0];
+const uniq = <T>(items: T[]) => Array.from(new Set(items));
+
+const max = <T>(items: T[]) =>
+  items.reduce((accum, current) => (current > accum ? current : accum));
+
+// Enumerates every candidate card combination permitted by the hole-card usage constraints,
+// exactly as v3 did.  Only used when the lookup-table core cannot apply: fewer than 5 total
+// cards, or constraints under which only partial (sub-5-card) hands can be formed.
+const getAllHandCombinations = ({
+  holeCards,
+  communityCards,
+  minimumHoleCards,
+  maximumHoleCards,
+}: Required<EvaluateOptions>): Card[][] => {
+  // when minimum <= 0 AND maximum >= holeCards.length, we can just combine
+  // holeCards & communityCards
+  if (minimumHoleCards <= 0 && maximumHoleCards >= holeCards.length) {
+    return [[...holeCards, ...communityCards]];
+  }
+
+  // when minimum <= 0, we can get all combinations of holeCards of length (maximum), then
+  // combine each of those combinations w/ communityCards
+  if (minimumHoleCards <= 0) {
+    return getCombinations(holeCards, maximumHoleCards).map((cards) => [
+      ...cards,
+      ...communityCards,
+    ]);
+  }
+
+  // otherwise, we need to find all combinations possible by combining exact combinations of
+  // N holeCards + M communityCards, where N=minimum and M=HAND_SIZE-minimum.
+  const sameMinMax = minimumHoleCards === maximumHoleCards;
+  const allHoleCardCombinations = new Array(sameMinMax ? 1 : maximumHoleCards - minimumHoleCards)
+    .fill(undefined)
+    .flatMap((i, index) =>
+      getCombinations(holeCards, index + minimumHoleCards + (sameMinMax ? 0 : 1)),
+    );
+
+  const remainingCardCounts = uniq(
+    allHoleCardCombinations.map((currentHoleCards) => {
+      const count = HAND_SIZE - currentHoleCards.length;
+      return count > communityCards.length ? communityCards.length : count;
+    }),
+  );
+
+  const remainingCardsMap = Object.fromEntries(
+    remainingCardCounts.map((count) => {
+      return [count, getCombinations(communityCards, count)];
+    }),
+  );
+
+  const allHandCombinations = allHoleCardCombinations.flatMap((currentHoleCards) => {
+    const remainingCardCount = HAND_SIZE - currentHoleCards.length;
+    const allCommunityCards = remainingCardsMap[remainingCardCount] ?? [];
+    if (allCommunityCards.length === 0) {
+      return [currentHoleCards];
+    }
+    return allCommunityCards.map((currentCommunityCards) => [
+      ...currentHoleCards,
+      ...currentCommunityCards,
+    ]);
+  });
+
+  // only include combinations that are the longest, as shorter combinations will
+  // never possibly be better due to not having kickers to improve their hand strenth
+  const longestCombination = max(allHandCombinations.map((cards) => cards.length));
+
+  return allHandCombinations.filter((cards) => cards.length === longestCombination);
+};
 
 /**
  * Determines the best 5-card hand makeable from the provided hole and community cards, given
@@ -57,9 +121,16 @@ export const evaluate = ({
   try {
     plan = compilePlan(holeCards.length, communityCards.length, minimumHoleCards, maximumHoleCards);
   } catch {
-    // Fewer than 5 cards total (or constraints that only permit partial hands): evaluate the
-    // partial-hand combinations exactly as v3 did.
-    return evaluateLegacy({ holeCards, communityCards, minimumHoleCards, maximumHoleCards });
+    // Fewer than 5 cards total (or constraints that only permit partial hands): describe every
+    // candidate combination and keep the best.
+    return getAllHandCombinations({
+      holeCards,
+      communityCards,
+      minimumHoleCards,
+      maximumHoleCards,
+    })
+      .map(describeHand)
+      .sort(compare)[0];
   }
 
   const holeIds = handToIds(holeCards);
@@ -71,7 +142,6 @@ export const evaluate = ({
   let bestCards: Card[] = [];
 
   if (plan.mode === 'single') {
-    bestRank = rankN([...holeIds, ...boardIds], holeIds.length + boardIds.length);
     bestCards = [...holeCards, ...communityCards];
   } else if (plan.mode === 'holeSubsets') {
     plan.holeSubsets.forEach((subset) => {
@@ -97,18 +167,5 @@ export const evaluate = ({
     });
   }
 
-  const described = evaluateHand(bestCards);
-  if (described.strength === handStrengthFromRank(bestRank)) {
-    return described;
-  }
-
-  // The legacy describe logic missed the hand the integer core found (it can overlook a
-  // straight flush in hands of more than 5 cards); describe the exact 5 cards instead.
-  const fiveCardSets = getCombinations(bestCards, HAND_SIZE);
-  for (let i = 0; i < fiveCardSets.length; i += 1) {
-    if (rankN(handToIds(fiveCardSets[i]), HAND_SIZE) === bestRank) {
-      return evaluateHand(fiveCardSets[i]);
-    }
-  }
-  return described;
+  return describeHand(bestCards);
 };
