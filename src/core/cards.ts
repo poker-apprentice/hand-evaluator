@@ -1,10 +1,9 @@
 import { ALL_CARDS, Card } from '@poker-apprentice/types';
 
-// Cards are represented internally as integers 0-51, where `id = rankIndex * 4 + suitIndex` with
-// ranks ordered 2..A and suits ordered c, d, h, s.  This matches the ordering of `ALL_CARDS`, so
-// conversion in either direction is a simple index lookup.
-export const CARD_ID_COUNT = 52;
-
+// Cards are represented internally as integers 0-51, where `id = rankIndex * SUIT_COUNT +
+// suitIndex` with ranks ordered 2..A and suits ordered c, d, h, s.  This matches the ordering
+// of `ALL_CARDS`, so conversion in either direction is a simple index lookup.  The bit
+// operations below (`>> 2`, `& 3`) rely on SUIT_COUNT being exactly 4.
 const CARD_IDS = new Map<Card, number>(ALL_CARDS.map((card, id) => [card, id]));
 
 /**

@@ -1,11 +1,9 @@
 import { Card, HandStrength } from '@poker-apprentice/types';
 import { handToIds, rankOfId, suitOfId } from '../core/cards';
+import { ACE_RANK, HAND_SIZE, SUIT_COUNT } from '../core/constants';
 import { handStrengthFromRank, rankN } from '../core/rank';
 import { EvaluatedHand } from '../types';
 import { cardComparator } from './cardComparator';
-
-const HAND_SIZE = 5;
-const ACE_RANK = 12;
 
 // Returns the cards grouped by rank, in descending rank order.  Cards within a group keep
 // their relative order from the (stably) sorted input, which determines which suit is chosen
@@ -116,7 +114,7 @@ export const describeHand = (unsortedCards: Card[]): EvaluatedHand => {
     case HandStrength.RoyalFlush:
     case HandStrength.StraightFlush:
     case HandStrength.Flush: {
-      const suitCounts = [0, 0, 0, 0];
+      const suitCounts = new Array<number>(SUIT_COUNT).fill(0);
       ids.forEach((id) => {
         suitCounts[suitOfId(id)] += 1;
       });

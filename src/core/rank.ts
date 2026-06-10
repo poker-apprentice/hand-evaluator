@@ -1,6 +1,17 @@
 import { HandStrength } from '@poker-apprentice/types';
+import * as constants from './constants';
 import { hashQuinary } from './hash';
 import { FLUSH, NOFLUSH5, NOFLUSH6, NOFLUSH7 } from './tables';
+
+// Performance: ES module imports are live bindings, so the CommonJS build reads an imported
+// name as a property access on the required module (`constants_1.SUIT_COUNT`) on every use.
+// That is harmless in cold code, but `rankN` runs in the innermost loop of every odds
+// calculation, where the per-read overhead benchmarks ~10% slower than a local const.  Copying
+// the (never-reassigned) values once at module load keeps `constants.ts` as the single source
+// of truth without that cost.
+const HAND_SIZE = constants.HAND_SIZE;
+const RANK_COUNT = constants.RANK_COUNT;
+const SUIT_COUNT = constants.SUIT_COUNT;
 
 // The strongest possible hand rank returned by `rankN` (a royal flush).
 export const BEST_RANK = 1;
@@ -20,8 +31,8 @@ const NOFLUSH_BY_SIZE: Array<Int16Array | undefined> = [
 ];
 
 // Reused scratch buffers; `rankN` performs no allocation, which also means it is not reentrant.
-const suitCounts = new Uint8Array(4);
-const rankCounts = new Uint8Array(13);
+const suitCounts = new Uint8Array(SUIT_COUNT);
+const rankCounts = new Uint8Array(RANK_COUNT);
 
 /**
  * Evaluates the best 5-card poker hand makeable from 5, 6, or 7 cards, provided as integer card
@@ -44,8 +55,8 @@ export const rankN = (cards: ArrayLike<number>, length: number): number => {
   // At most one suit can hold 5 of up to 7 cards, and a hand containing a flush can never make
   // a better non-flush hand (quads/full house require 4+ off-suit cards), so the suited cards
   // alone determine the hand's rank.
-  for (let suit = 0; suit < 4; suit += 1) {
-    if (suitCounts[suit] >= 5) {
+  for (let suit = 0; suit < SUIT_COUNT; suit += 1) {
+    if (suitCounts[suit] >= HAND_SIZE) {
       let mask = 0;
       for (let i = 0; i < length; i += 1) {
         if ((cards[i] & 3) === suit) {

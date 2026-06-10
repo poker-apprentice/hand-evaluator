@@ -1,7 +1,5 @@
+import { HAND_SIZE, MAX_RANKABLE_CARDS } from './constants';
 import { WORST_RANK, rankN } from './rank';
-
-const HAND_SIZE = 5;
-const MAX_RANKABLE_CARDS = 7;
 
 export type EvalMode = 'single' | 'holeSubsets' | 'pairedSubsets';
 

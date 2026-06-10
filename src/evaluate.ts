@@ -1,6 +1,7 @@
 import { Card } from '@poker-apprentice/types';
 import { compare } from './compare';
 import { handToIds } from './core/cards';
+import { HAND_SIZE } from './core/constants';
 import { GamePlan, compilePlan } from './core/plan';
 import { WORST_RANK, rankN } from './core/rank';
 import { EvaluatedHand } from './types';
@@ -13,8 +14,6 @@ export interface EvaluateOptions {
   minimumHoleCards?: number;
   maximumHoleCards?: number;
 }
-
-const HAND_SIZE = 5;
 
 const uniq = <T>(items: T[]) => Array.from(new Set(items));
 

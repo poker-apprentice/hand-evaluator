@@ -1,6 +1,7 @@
 import { Card, Hand } from '@poker-apprentice/types';
 import { Odds } from '../types';
-import { CARD_ID_COUNT, cardToId } from './cards';
+import { cardToId } from './cards';
+import { CARD_COUNT } from './constants';
 import { GamePlan, bestRankForPlan, compilePlan } from './plan';
 import { WORST_RANK, rankN } from './rank';
 
@@ -56,7 +57,7 @@ const choose = (n: number, k: number): number => {
 // binomials[k][n] = C(n, k) for the small k needed to rank card subsets in colex order.
 const binomials: number[][] = [];
 for (let k = 0; k <= MEMO_MAX_SUBSET_SIZE; k += 1) {
-  binomials.push(Array.from({ length: CARD_ID_COUNT + 1 }, (_, n) => choose(n, k)));
+  binomials.push(Array.from({ length: CARD_COUNT + 1 }, (_, n) => choose(n, k)));
 }
 
 /**
@@ -89,7 +90,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
   }
 
   // Convert all known cards to ids, rejecting duplicates.
-  const seen = new Uint8Array(CARD_ID_COUNT);
+  const seen = new Uint8Array(CARD_COUNT);
   const claim = (card: Card): number => {
     const id = cardToId(card);
     if (seen[id] !== 0) {
@@ -137,8 +138,8 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
 
   // The unseen cards from which all unknown slots are filled.
   let deckSize = 0;
-  const deck = new Uint8Array(CARD_ID_COUNT);
-  for (let id = 0; id < CARD_ID_COUNT; id += 1) {
+  const deck = new Uint8Array(CARD_COUNT);
+  for (let id = 0; id < CARD_COUNT; id += 1) {
     if (seen[id] === 0) {
       deck[deckSize] = id;
       deckSize += 1;
@@ -189,7 +190,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
 
     if (subsetSize >= 1 && subsetSize <= MEMO_MAX_SUBSET_SIZE && memoCost < directCost) {
       // Index every card that can appear on the board (known community cards + unseen deck).
-      const boardCardIndexById = new Int16Array(CARD_ID_COUNT).fill(-1);
+      const boardCardIndexById = new Int16Array(CARD_COUNT).fill(-1);
       const possibleBoardCards = new Uint8Array(possibleBoardCardCount);
       for (let i = 0; i < communityCards.length; i += 1) {
         possibleBoardCards[i] = boardBuffer[i];

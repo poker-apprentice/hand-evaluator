@@ -16,11 +16,17 @@
 import fs from 'fs';
 import path from 'path';
 import { rankOfId, suitOfId } from '../src/core/cards';
+import {
+  ACE_RANK,
+  CARD_COUNT,
+  HAND_SIZE,
+  MAX_RANKABLE_CARDS,
+  RANK_COUNT,
+  SUIT_COUNT,
+} from '../src/core/constants';
 import { hashQuinary, quinaryTableSize } from '../src/core/hash';
 import { getCombinations } from '../src/utils/getCombinations';
 
-const RANK_COUNT = 13;
-const CARD_COUNT = 52;
 const CLASS_COUNT = 7462;
 
 // Hand categories used while deriving equivalence classes (higher = stronger).  Royal flushes
@@ -85,25 +91,25 @@ const assert = (condition: boolean, message: string): void => {
 // into a single comparable integer, where greater = stronger.
 const encodeClass = (category: Category, digits: number[]): number => {
   let value = category;
-  for (let i = 0; i < 5; i += 1) {
-    value = value * 13 + (digits[i] ?? 0);
+  for (let i = 0; i < HAND_SIZE; i += 1) {
+    value = value * RANK_COUNT + (digits[i] ?? 0);
   }
   return value;
 };
 
-const categoryOfClass = (value: number): Category => Math.floor(value / 13 ** 5);
+const categoryOfClass = (value: number): Category => Math.floor(value / RANK_COUNT ** HAND_SIZE);
 
 // Returns the high-card rank index of the straight formed by 5 distinct ranks, or -1 if the
 // ranks do not form a straight.  The wheel (A-2-3-4-5) reports its high card as the 5.
 const getStraightHigh = (ranksDesc: number[]): number => {
   const unique = Array.from(new Set(ranksDesc));
-  if (unique.length !== 5) {
+  if (unique.length !== HAND_SIZE) {
     return -1;
   }
-  if (unique[0] - unique[4] === 4) {
+  if (unique[0] - unique[HAND_SIZE - 1] === HAND_SIZE - 1) {
     return unique[0];
   }
-  if (unique[0] === 12 && unique[1] === 3) {
+  if (unique[0] === ACE_RANK && unique[1] === 3) {
     return 3;
   }
   return -1;
@@ -227,7 +233,7 @@ const rank5 = (ids: number[]): number => {
 // Best (minimum) rank achievable using any 5 of the provided cards.
 const bestRank = (ids: number[]): number => {
   let best = Number.MAX_SAFE_INTEGER;
-  getCombinations(ids, 5).forEach((combo) => {
+  getCombinations(ids, HAND_SIZE).forEach((combo) => {
     best = Math.min(best, rank5(combo));
   });
   return best;
@@ -242,11 +248,11 @@ const buildFlushTable = (): Int16Array => {
         ranks.push(rank);
       }
     }
-    if (ranks.length < 5 || ranks.length > 7) {
+    if (ranks.length < HAND_SIZE || ranks.length > MAX_RANKABLE_CARDS) {
       continue;
     }
     // Evaluate the suited cards directly; all 5-card subsets are flushes (or straight flushes).
-    table[mask] = bestRank(ranks.map((rank) => rank * 4));
+    table[mask] = bestRank(ranks.map((rank) => rank * SUIT_COUNT));
   }
 
   // Spot-check: a royal flush (A-K-Q-J-T suited) must be the best possible hand.
@@ -274,7 +280,7 @@ const buildNoFlushTable = (handSize: number): Int16Array => {
       let suit = 0;
       for (let r = 0; r < RANK_COUNT; r += 1) {
         for (let copy = 0; copy < counts[r]; copy += 1) {
-          ids.push(r * 4 + (suit & 3));
+          ids.push(r * SUIT_COUNT + (suit % SUIT_COUNT));
           suit += 1;
         }
       }
@@ -285,7 +291,7 @@ const buildNoFlushTable = (handSize: number): Int16Array => {
       table[index] = bestRank(ids);
       return;
     }
-    const maxDigit = Math.min(4, remaining);
+    const maxDigit = Math.min(SUIT_COUNT, remaining);
     for (let digit = 0; digit <= maxDigit; digit += 1) {
       counts[rank] = digit;
       visit(rank + 1, remaining - digit);

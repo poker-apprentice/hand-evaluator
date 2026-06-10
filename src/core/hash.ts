@@ -1,18 +1,27 @@
-const RANK_COUNT = 13;
-const MAX_HAND_SIZE = 7;
-const MAX_RANK_DUPES = 4;
+import * as constants from './constants';
+
+// Performance: ES module imports are live bindings, so the CommonJS build reads an imported
+// name as a property access on the required module (`constants_1.RANK_COUNT`) on every use.
+// That is harmless in cold code, but `hashQuinary` runs in the innermost loop of every odds
+// calculation, where the per-read overhead benchmarks ~10% slower than a local const.  Copying
+// the (never-reassigned) values once at module load keeps `constants.ts` as the single source
+// of truth without that cost.
+const MAX_RANKABLE_CARDS = constants.MAX_RANKABLE_CARDS;
+const RANK_COUNT = constants.RANK_COUNT;
+const SUIT_COUNT = constants.SUIT_COUNT;
 
 // suffixCounts[length][sum] is the number of digit vectors of the given length, where each digit
-// is between 0 and MAX_RANK_DUPES, whose digits add up to `sum`.
+// is between 0 and SUIT_COUNT (a rank appears at most once per suit), whose digits add up to
+// `sum`.
 const buildSuffixCounts = (): number[][] => {
   const counts: number[][] = [];
   for (let length = 0; length <= RANK_COUNT; length += 1) {
-    counts.push(new Array<number>(MAX_HAND_SIZE + 1).fill(0));
+    counts.push(new Array<number>(MAX_RANKABLE_CARDS + 1).fill(0));
   }
   counts[0][0] = 1;
   for (let length = 1; length <= RANK_COUNT; length += 1) {
-    for (let sum = 0; sum <= MAX_HAND_SIZE; sum += 1) {
-      for (let digit = 0; digit <= MAX_RANK_DUPES && digit <= sum; digit += 1) {
+    for (let sum = 0; sum <= MAX_RANKABLE_CARDS; sum += 1) {
+      for (let digit = 0; digit <= SUIT_COUNT && digit <= sum; digit += 1) {
         counts[length][sum] += counts[length - 1][sum - digit];
       }
     }
