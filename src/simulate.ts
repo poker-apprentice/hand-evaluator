@@ -29,7 +29,7 @@ export function* simulate({
 }: SimulateOptions): Generator<Odds[], Odds[]> {
   const engine = createEngine(allHoleCards, options);
 
-  for (;;) {
+  while (true) {
     for (let i = 0; i < samplesPerUpdate; i += 1) {
       engine.sample(Math.random);
     }
