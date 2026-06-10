@@ -5,6 +5,5 @@
   },
   "testRegex": "(src/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
   "testPathIgnorePatterns": ["/node_modules/", "/src/__tests__/fixtures/"],
-  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-  "setupFilesAfterEnv": ["<rootDir>/setupJest.ts"]
+  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
 }
