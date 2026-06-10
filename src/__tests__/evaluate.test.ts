@@ -16,6 +16,15 @@ describe('evaluate', () => {
     });
   });
 
+  it('recognizes straight flushes obscured by a duplicate-rank card (v3 bug)', () => {
+    // v3 reported a flush here: its straight detection dropped the 9h variant because the
+    // run K-Q-J-T had already been completed by the 9d.
+    expect(evaluate({ holeCards: ['3s', 'Jh', 'Th', 'Qh', '9d', 'Kh', '9h'] })).toEqual({
+      strength: HandStrength.StraightFlush,
+      hand: ['Kh', 'Qh', 'Jh', 'Th', '9h'],
+    });
+  });
+
   it('recognizes straight flushes with ace treated as low', () => {
     expect(evaluate({ holeCards: ['Qh', '5d', '2d', '3d', '8d', 'Ad', '4d'] })).toEqual({
       strength: HandStrength.StraightFlush,

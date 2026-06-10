@@ -1,0 +1,258 @@
+// The original (v3) object-based hand evaluation logic, retained for two purposes:
+//
+//  1. Describing a hand: the integer core (`src/core`) identifies the best hand's rank, but
+//     `evaluate`'s public contract returns the winning 5 cards in v3's exact order, which this
+//     logic produces.
+//  2. Evaluating hands of fewer than 5 cards, which the lookup-table core does not support.
+//
+// This file is not in the hot path of `odds`/`simulate`; only `evaluate` calls into it.
+import { Card, HandStrength, Rank, Suit, getRank, getSuit } from '@poker-apprentice/types';
+import { rankOrder } from '../constants';
+import { EvaluatedHand } from '../types';
+import { cardComparator } from '../utils/cardComparator';
+import { getCombinations } from '../utils/getCombinations';
+import { handComparator } from '../utils/handComparator';
+
+const HAND_SIZE = 5;
+
+const uniq = <T>(items: T[]) => Array.from(new Set(items));
+
+const max = <T>(items: T[]) =>
+  items.reduce((accum, current) => (current > accum ? current : accum));
+
+interface HandCombinationOptions {
+  holeCards: Card[];
+  communityCards: Card[];
+  minimumHoleCards: number;
+  maximumHoleCards: number;
+}
+
+/**
+ * Builds all candidate card combinations permitted by the hole-card usage constraints, exactly
+ * as v3 did (including combinations of fewer than 5 cards when no more are available).
+ * @param {HandCombinationOptions} options The cards available and usage constraints.
+ * @returns {Card[][]} All candidate combinations, longest first.
+ */
+export const getAllHandCombinations = ({
+  holeCards,
+  communityCards,
+  minimumHoleCards,
+  maximumHoleCards,
+}: HandCombinationOptions): Card[][] => {
+  // when minimum <= 0 AND maximum >= holeCards.length, we can just combine
+  // holeCards & communityCards
+  if (minimumHoleCards <= 0 && maximumHoleCards >= holeCards.length) {
+    return [[...holeCards, ...communityCards]];
+  }
+
+  // when minimum <= 0, we can get all combinations of holeCards of length (maximum), then
+  // combine each of those combinations w/ communityCards
+  if (minimumHoleCards <= 0) {
+    return getCombinations(holeCards, maximumHoleCards).map((cards) => [
+      ...cards,
+      ...communityCards,
+    ]);
+  }
+
+  // otherwise, we need to find all combinations possible by combining exact combinations of
+  // N holeCards + M communityCards, where N=minimum and M=HAND_SIZE-minimum.
+  const sameMinMax = minimumHoleCards === maximumHoleCards;
+  const allHoleCardCombinations = new Array(sameMinMax ? 1 : maximumHoleCards - minimumHoleCards)
+    .fill(undefined)
+    .flatMap((i, index) =>
+      getCombinations(holeCards, index + minimumHoleCards + (sameMinMax ? 0 : 1)),
+    );
+
+  const remainingCardCounts = uniq(
+    allHoleCardCombinations.map((currentHoleCards) => {
+      const count = HAND_SIZE - currentHoleCards.length;
+      return count > communityCards.length ? communityCards.length : count;
+    }),
+  );
+
+  const remainingCardsMap = Object.fromEntries(
+    remainingCardCounts.map((count) => {
+      return [count, getCombinations(communityCards, count)];
+    }),
+  );
+
+  const allHandCombinations = allHoleCardCombinations.flatMap((currentHoleCards) => {
+    const remainingCardCount = HAND_SIZE - currentHoleCards.length;
+    const allCommunityCards = remainingCardsMap[remainingCardCount] ?? [];
+    if (allCommunityCards.length === 0) {
+      return [currentHoleCards];
+    }
+    return allCommunityCards.map((currentCommunityCards) => [
+      ...currentHoleCards,
+      ...currentCommunityCards,
+    ]);
+  });
+
+  // only include combinations that are the longest, as shorter combinations will
+  // never possibly be better due to not having kickers to improve their hand strenth
+  const longestCombination = max(allHandCombinations.map((cards) => cards.length));
+
+  return allHandCombinations.filter((cards) => cards.length === longestCombination);
+};
+
+const getStraights = (cards: Card[]): Card[][] => {
+  const straights: Card[][] = [];
+
+  // allow ace to be treated as high or low
+  const lastAceIndex = cards.findLastIndex((card) => getRank(card) === 'A');
+  const adjustedCards =
+    lastAceIndex === -1 ? cards : [...cards, ...cards.slice(0, lastAceIndex + 1)];
+
+  for (let i = 0; i < adjustedCards.length - HAND_SIZE + 1; i += 1) {
+    const currentHands: Card[][] = [[adjustedCards[i]]];
+    for (let j = i + 1; j < adjustedCards.length; j += 1) {
+      const card = adjustedCards[j];
+      const rank = getRank(card);
+      const lastRank = getRank(currentHands[0][currentHands[0].length - 1]);
+
+      if (currentHands[0].length < HAND_SIZE) {
+        if (rank === lastRank) {
+          // If the current card is the same rank as the last card added, then append it
+          // to the list of possible hands.
+          const newHand = currentHands[0].slice(0, -1);
+          newHand.push(card);
+          currentHands.push(newHand);
+        } else if (rankOrder.indexOf(rank) === rankOrder.indexOf(lastRank) - 1) {
+          // If the current card is one rank lower than the last card, then append it
+          // to all possible hands.
+          currentHands.forEach((currentHand) => currentHand.push(card));
+        } else if (
+          rankOrder.indexOf(rank) === rankOrder.length - 1 &&
+          rankOrder.indexOf(lastRank) === 0
+        ) {
+          // If the current card is an ace, and the last card was a deuce, then append it
+          // to all possible hands.
+          currentHands.forEach((currentHand) => currentHand.push(card));
+        }
+      }
+    }
+    straights.push(...currentHands.filter((hand) => hand.length === HAND_SIZE));
+  }
+
+  // order straights from biggest to smallest
+  return straights.sort(handComparator);
+};
+
+const getDuplicates = (cards: Card[]): Map<Rank, Card[]> => {
+  const duplicates: Map<Rank, Card[]> = new Map();
+  cards.forEach((card) => {
+    const rank = getRank(card);
+    const current = duplicates.get(rank) ?? [];
+    current.push(card);
+    duplicates.set(rank, current);
+  });
+  return duplicates;
+};
+
+const getCardsOfLength = <T>(cardGroups: Map<T, Card[]>, count: number): Card[][] => {
+  const values = [...cardGroups.values()];
+  return values.filter((cards) => cards.length === count).sort(handComparator);
+};
+
+const getFlushes = (cards: Card[]): Card[][] => {
+  const suitedCards: Map<Suit, Card[]> = new Map();
+  cards.forEach((card) => {
+    const suit = getSuit(card);
+    const current = suitedCards.get(suit) ?? [];
+    current.push(card);
+    suitedCards.set(suit, current);
+  });
+
+  // only use the first 5 cards of the same suit to make up a hand
+  suitedCards.forEach((current) => {
+    current.splice(HAND_SIZE);
+  });
+
+  // only return flushes made up of a legitimate hand size
+  return getCardsOfLength(suitedCards, HAND_SIZE);
+};
+
+const getKickers = (hand: Card[], allCards: Card[]) => {
+  const kickerCount = HAND_SIZE - hand.length;
+  return allCards.filter((card) => !hand.includes(card)).slice(0, kickerCount);
+};
+
+/**
+ * Determines the strength and best 5 cards of a hand, exactly as v3's evaluation did.  Note
+ * that for hands of more than 5 cards this logic can miss a straight flush whose final card
+ * shares a rank with another card (reporting a flush instead); `evaluate` detects that case
+ * via the integer core and re-describes the exact 5-card hand.
+ * @param {Card[]} unsortedCards The cards to evaluate.
+ * @returns {EvaluatedHand} The strength and best 5-card hand.
+ */
+export const evaluateHand = (unsortedCards: Card[]): EvaluatedHand => {
+  const cards = unsortedCards.sort(cardComparator);
+  const straights = getStraights(cards);
+
+  // straight flush/royal flush
+  const straightFlushes = straights.filter((straight) => uniq(straight.map(getSuit)).length === 1);
+  if (straightFlushes.length > 0) {
+    const strength =
+      getRank(straightFlushes[0][0]) === 'A' ? HandStrength.RoyalFlush : HandStrength.StraightFlush;
+    return { strength, hand: straightFlushes[0] };
+  }
+
+  const duplicates: Map<Rank, Card[]> = getDuplicates(cards);
+
+  // four of a kind
+  const allQuads = getCardsOfLength(duplicates, 4);
+  if (allQuads.length > 0) {
+    const quads = allQuads[0];
+    const kickers = getKickers(quads, cards);
+    return { strength: HandStrength.FourOfAKind, hand: [...quads, ...kickers] };
+  }
+
+  // full house (via trips and a pair)
+  const allTrips = getCardsOfLength(duplicates, 3);
+  const allPairs = getCardsOfLength(duplicates, 2);
+
+  if (allTrips.length > 0 && allPairs.length > 0) {
+    return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allPairs[0]] };
+  }
+
+  // full house (via trips twice, which can happen on a board like KKK5 w/ pocket pair 55)
+  if (allTrips.length >= 2) {
+    allTrips.sort((a, b) => cardComparator(a[0], b[0]));
+    return { strength: HandStrength.FullHouse, hand: [...allTrips[0], ...allTrips[1].slice(0, 2)] };
+  }
+
+  // flush
+  const flushes = getFlushes(cards);
+  if (flushes.length > 0) {
+    return { strength: HandStrength.Flush, hand: flushes[0] };
+  }
+
+  // straight
+  if (straights.length > 0) {
+    return { strength: HandStrength.Straight, hand: straights[0] };
+  }
+
+  // three of a kind
+  if (allTrips.length > 0) {
+    const trips = allTrips[0];
+    const kickers = getKickers(trips, cards);
+    return { strength: HandStrength.ThreeOfAKind, hand: [...trips, ...kickers] };
+  }
+
+  // two pair
+  if (allPairs.length >= 2) {
+    const twoPair = [...allPairs[0], ...allPairs[1]];
+    const kickers = getKickers(twoPair, cards);
+    return { strength: HandStrength.TwoPair, hand: [...twoPair, ...kickers] };
+  }
+
+  // one pair
+  if (allPairs.length > 0) {
+    const pair = allPairs[0];
+    const kickers = getKickers(pair, cards);
+    return { strength: HandStrength.OnePair, hand: [...pair, ...kickers] };
+  }
+
+  // high card
+  return { strength: HandStrength.HighCard, hand: getKickers([], cards) };
+};
