@@ -2,7 +2,7 @@ import { Card, Hand } from '@poker-apprentice/types';
 import { Odds } from '../types';
 import { CARD_ID_COUNT, cardToId } from './cards';
 import { GamePlan, bestRankForPlan, compilePlan } from './plan';
-import { WORST_RANK } from './rank';
+import { WORST_RANK, rankN } from './rank';
 
 export interface EngineOptions {
   communityCards: Card[];
@@ -30,8 +30,8 @@ export interface Engine {
   players: number;
   /** Number of distinct scenarios (combinations of unknown cards across all groups). */
   scenarioCount: number;
-  /** Number of `rankN` lookups required per scenario. */
-  evaluationsPerScenario: number;
+  /** Estimated total number of table lookups required to evaluate every scenario. */
+  estimatedEvaluations: number;
   /** Exhaustively enumerates every scenario, tallying each into the accumulators. */
   enumerate: () => void;
   /** Deals one uniformly random scenario, tallying it into the accumulators. */
@@ -39,6 +39,10 @@ export interface Engine {
   /** Returns the accumulated odds for each hand. */
   snapshot: () => Odds[];
 }
+
+// Largest board-subset size for which board-subset memoization is considered; C(52,3) = 22,100
+// entries per player keeps the tables small and their precomputation nearly free.
+const MEMO_MAX_SUBSET_SIZE = 3;
 
 // C(n, k), computed so every intermediate value is an exact integer.
 const choose = (n: number, k: number): number => {
@@ -48,6 +52,12 @@ const choose = (n: number, k: number): number => {
   }
   return result;
 };
+
+// binomials[k][n] = C(n, k) for the small k needed to rank card subsets in colex order.
+const binomials: number[][] = [];
+for (let k = 0; k <= MEMO_MAX_SUBSET_SIZE; k += 1) {
+  binomials.push(Array.from({ length: CARD_ID_COUNT + 1 }, (_, n) => choose(n, k)));
+}
 
 /**
  * Builds the shared engine behind `odds` and `simulate`: converts hands to integer card ids,
@@ -91,6 +101,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
 
   const holeBuffers: Uint8Array[] = [];
   const groups: Group[] = [];
+  let playerGroupCount = 0;
   allHoleCards.forEach((holeCards) => {
     if (holeCards.length > expectedHoleCardCount) {
       throw new Error(
@@ -107,6 +118,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
         targets.push({ buffer, offset });
       }
       groups.push({ targets });
+      playerGroupCount += 1;
     }
     holeBuffers.push(buffer);
   });
@@ -153,14 +165,139 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
   const bestRanks = new Uint16Array(players);
   let samples = 0;
 
+  const computeBestRanksDirect = (): void => {
+    for (let p = 0; p < players; p += 1) {
+      bestRanks[p] = bestRankForPlan(plan, holeBuffers[p], boardBuffer);
+    }
+  };
+
+  // Board-subset memoization for uniform 'pairedSubsets' games (e.g. omaha): when every
+  // player's hole cards are fully known, each player's best rank for a scenario is
+  // min-over-board-subsets of min-over-hole-subsets, and the inner minimum depends only on
+  // which cards form the board subset.  Precomputing it for every possible board subset turns
+  // each scenario into a handful of table lookups instead of `unitsPerHand` evaluations.
+  let computeBestRanksMemo: (() => void) | null = null;
+  let memoCost = 0;
+  let memoLookupsPerScenario = 0;
+  const pairing = plan.uniformPairing;
+  if (plan.mode === 'pairedSubsets' && pairing !== undefined && playerGroupCount === 0) {
+    const subsetSize = pairing.boardSubsets[0].length;
+    const possibleBoardCardCount = communityCards.length + deckSize;
+    const tableSize = choose(possibleBoardCardCount, subsetSize);
+    memoCost = tableSize * pairing.holeSubsets.length * players;
+    const directCost = scenarioCount * plan.unitsPerHand * players;
+
+    if (subsetSize >= 1 && subsetSize <= MEMO_MAX_SUBSET_SIZE && memoCost < directCost) {
+      // Index every card that can appear on the board (known community cards + unseen deck).
+      const boardCardIndexById = new Int16Array(CARD_ID_COUNT).fill(-1);
+      const possibleBoardCards = new Uint8Array(possibleBoardCardCount);
+      for (let i = 0; i < communityCards.length; i += 1) {
+        possibleBoardCards[i] = boardBuffer[i];
+      }
+      for (let i = 0; i < deckSize; i += 1) {
+        possibleBoardCards[communityCards.length + i] = deck[i];
+      }
+      for (let i = 0; i < possibleBoardCardCount; i += 1) {
+        boardCardIndexById[possibleBoardCards[i]] = i;
+      }
+
+      // Each player's hole-card id selections, resolved once.
+      const holeSelections: number[][][] = holeBuffers.map((buffer) =>
+        pairing.holeSubsets.map((subset) => subset.map((index) => buffer[index])),
+      );
+
+      // Fill the tables: for every `subsetSize`-card combination of possible board cards (in
+      // ascending index order, ranked by colex position), the best rank per player across all
+      // of their hole-card selections.  Combinations containing a player's own hole cards are
+      // computed but never looked up.
+      const tables = holeBuffers.map(() => new Uint16Array(tableSize));
+      const evalCards = new Uint8Array(5);
+      const subsetIndexes = new Int16Array(subsetSize);
+      const fill = (depth: number, start: number, colex: number): void => {
+        if (depth === subsetSize) {
+          for (let p = 0; p < players; p += 1) {
+            const selections = holeSelections[p];
+            let best = WORST_RANK + 1;
+            for (let s = 0; s < selections.length; s += 1) {
+              const selection = selections[s];
+              let count = 0;
+              for (let i = 0; i < selection.length; i += 1) {
+                evalCards[count] = selection[i];
+                count += 1;
+              }
+              for (let i = 0; i < subsetSize; i += 1) {
+                evalCards[count] = possibleBoardCards[subsetIndexes[i]];
+                count += 1;
+              }
+              const rank = rankN(evalCards, count);
+              if (rank < best) {
+                best = rank;
+              }
+            }
+            tables[p][colex] = best;
+          }
+          return;
+        }
+        for (
+          let index = start;
+          index <= possibleBoardCardCount - (subsetSize - depth);
+          index += 1
+        ) {
+          subsetIndexes[depth] = index;
+          fill(depth + 1, index + 1, colex + binomials[depth + 1][index]);
+        }
+      };
+      fill(0, 0, 0);
+
+      // Per-scenario state: the board's card indexes (sorted ascending so every position
+      // subset of them is itself ascending) and the colex rank of each board subset.
+      const boardSubsets = pairing.boardSubsets;
+      memoLookupsPerScenario = boardSubsets.length;
+      const sortedIndexes = new Int16Array(plan.communityCount);
+      computeBestRanksMemo = () => {
+        for (let i = 0; i < plan.communityCount; i += 1) {
+          const value = boardCardIndexById[boardBuffer[i]];
+          let j = i;
+          while (j > 0 && sortedIndexes[j - 1] > value) {
+            sortedIndexes[j] = sortedIndexes[j - 1];
+            j -= 1;
+          }
+          sortedIndexes[j] = value;
+        }
+        for (let p = 0; p < players; p += 1) {
+          bestRanks[p] = WORST_RANK + 1;
+        }
+        for (let t = 0; t < boardSubsets.length; t += 1) {
+          const subset = boardSubsets[t];
+          let colex = 0;
+          for (let i = 0; i < subsetSize; i += 1) {
+            colex += binomials[i + 1][sortedIndexes[subset[i]]];
+          }
+          for (let p = 0; p < players; p += 1) {
+            const rank = tables[p][colex];
+            if (rank < bestRanks[p]) {
+              bestRanks[p] = rank;
+            }
+          }
+        }
+      };
+    }
+  }
+
+  const computeBestRanks = computeBestRanksMemo ?? computeBestRanksDirect;
+  const estimatedEvaluations =
+    computeBestRanksMemo !== null
+      ? memoCost + scenarioCount * players * memoLookupsPerScenario
+      : scenarioCount * players * plan.unitsPerHand;
+
   const tally = (): void => {
     samples += 1;
+    computeBestRanks();
     let best = WORST_RANK + 1;
     let bestIndex = -1;
     let bestCount = 0;
     for (let p = 0; p < players; p += 1) {
-      const rank = bestRankForPlan(plan, holeBuffers[p], boardBuffer);
-      bestRanks[p] = rank;
+      const rank = bestRanks[p];
       if (rank < best) {
         best = rank;
         bestIndex = p;
@@ -172,7 +309,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
     if (bestCount === 1) {
       wins[bestIndex] += 1;
       equity[bestIndex] += 1;
-    } else {
+    } else if (bestCount > 1) {
       const share = 1 / bestCount;
       for (let p = 0; p < players; p += 1) {
         if (bestRanks[p] === best) {
@@ -244,7 +381,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
   return {
     players,
     scenarioCount,
-    evaluationsPerScenario: players * plan.unitsPerHand,
+    estimatedEvaluations,
     enumerate: () => enumerateGroup(0),
     sample,
     snapshot,

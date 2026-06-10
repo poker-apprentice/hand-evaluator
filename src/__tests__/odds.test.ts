@@ -118,6 +118,22 @@ describe('odds', () => {
           { wins: 1, ties: 0, total: 1, equity: 1 },
         ]);
       });
+
+      // The two largest cases exercise the board-subset memoization fast path; their expected
+      // values were computed by the direct (unmemoized) evaluation path.
+      it('with 3 community cards unknown', () => {
+        expect(odds(hands, { ...omahaOptions, communityCards: ['9h', '6c'] })).toEqual([
+          { wins: 1697, ties: 0, total: 11480, equity: 1697 / 11480 },
+          { wins: 9783, ties: 0, total: 11480, equity: 9783 / 11480 },
+        ]);
+      });
+
+      it('preflop (exhaustive)', () => {
+        expect(odds(hands, { ...omahaOptions, communityCards: [] })).toEqual([
+          { wins: 637498, ties: 0, total: 1086008, equity: 637498 / 1086008 },
+          { wins: 448510, ties: 0, total: 1086008, equity: 448510 / 1086008 },
+        ]);
+      });
     });
 
     it('pineapple (up to 2 of 3 hole cards) to the turn', () => {

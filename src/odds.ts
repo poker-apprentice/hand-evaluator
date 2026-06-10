@@ -35,7 +35,7 @@ export const odds = (allHoleCards: Hand[], options: OddsOptions): Odds[] => {
   const engine = createEngine(allHoleCards, options);
 
   const maximumEvaluations = options.maximumEvaluations ?? DEFAULT_MAXIMUM_EVALUATIONS;
-  const requiredEvaluations = engine.scenarioCount * engine.evaluationsPerScenario;
+  const requiredEvaluations = engine.estimatedEvaluations;
   if (requiredEvaluations > maximumEvaluations) {
     throw new Error(
       `odds() would require ${requiredEvaluations} hand evaluations, which exceeds ` +

@@ -18,6 +18,12 @@ export interface GamePlan {
   holeSubsets: number[][];
   /** Pairs of hole/board index subsets forming exactly 5 cards ('pairedSubsets' mode only). */
   pairedSubsets: PairedSubset[];
+  /**
+   * Set when every paired subset uses the same number of hole cards (e.g. omaha's exactly-2
+   * rule), in which case `pairedSubsets` is exactly the cross product of these two lists.
+   * Enables board-subset memoization in the enumeration engine.
+   */
+  uniformPairing?: { holeSubsets: number[][]; boardSubsets: number[][] };
   /** Number of `rankN` lookups required to evaluate one hand. */
   unitsPerHand: number;
 }
@@ -106,6 +112,7 @@ export const compilePlan = (
   }
 
   const pairedSubsets: PairedSubset[] = [];
+  let uniformPairing: GamePlan['uniformPairing'];
   const minHoleUsed = Math.max(minUsed, HAND_SIZE - communityCount);
   for (let used = minHoleUsed; used <= maxUsed; used += 1) {
     const holeSubsets = getIndexSubsets(holeCount, used);
@@ -115,11 +122,20 @@ export const compilePlan = (
         pairedSubsets.push({ holeIndexes, boardIndexes });
       });
     });
+    if (minHoleUsed === maxUsed && holeSubsets.length > 0 && boardSubsets.length > 0) {
+      uniformPairing = { holeSubsets, boardSubsets };
+    }
   }
   if (pairedSubsets.length === 0) {
     throw new Error('Hole card usage constraints cannot produce a 5-card hand');
   }
-  return { ...basePlan, mode: 'pairedSubsets', pairedSubsets, unitsPerHand: pairedSubsets.length };
+  return {
+    ...basePlan,
+    mode: 'pairedSubsets',
+    pairedSubsets,
+    uniformPairing,
+    unitsPerHand: pairedSubsets.length,
+  };
 };
 
 // Reused scratch buffer; like `rankN`, plan evaluation performs no allocation per call.

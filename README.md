@@ -346,27 +346,27 @@ Benchmarked on an Apple M3 Pro MacBook Pro with 36 GB RAM using macOS 26.3. The 
 ┌─────────┬─────────────────────────────────┬─────────────┬────────────────────┬──────────┬─────────┐
 │ (index) │ Task Name                       │ ops/sec     │ Average Time (ns)  │ Margin   │ Samples │
 ├─────────┼─────────────────────────────────┼─────────────┼────────────────────┼──────────┼─────────┤
-│ 0       │ 'rank 7-card hands x1000'       │ '17,469'    │ 57242.98030910736  │ '±0.33%' │ 8735    │
-│ 1       │ 'evaluate high card'            │ '372,657'   │ 2683.4286450320797 │ '±1.06%' │ 186329  │
-│ 2       │ 'evaluate one pair'             │ '356,630'   │ 2804.023262073522  │ '±1.08%' │ 178316  │
-│ 3       │ 'evaluate two pair'             │ '351,262'   │ 2846.8759280766467 │ '±1.10%' │ 175632  │
-│ 4       │ 'evaluate three of a kind'      │ '371,246'   │ 2693.628033011023  │ '±1.28%' │ 185624  │
-│ 5       │ 'evaluate straight'             │ '322,263'   │ 3103.0502196974144 │ '±1.10%' │ 161132  │
-│ 6       │ 'evaluate flush'                │ '275,550'   │ 3629.0987835290484 │ '±1.79%' │ 137776  │
-│ 7       │ 'evaluate full house'           │ '445,537'   │ 2244.481539175176  │ '±1.27%' │ 222769  │
-│ 8       │ 'evaluate four of a kind'       │ '425,380'   │ 2350.8354561316937 │ '±1.38%' │ 212691  │
-│ 9       │ 'evaluate straight flush'       │ '400,452'   │ 2497.174027479272  │ '±1.27%' │ 200227  │
-│ 10      │ 'evaluate royal flush'          │ '367,500'   │ 2721.0844838944336 │ '±1.61%' │ 183751  │
-│ 11      │ 'odds holdem heads up preflop'  │ '3'         │ 282591000.0999999  │ '±0.17%' │ 10      │
-│ 12      │ 'odds holdem heads up to flop'  │ '6,266'     │ 159580.0124441858  │ '±0.80%' │ 3134    │
-│ 13      │ 'odds holdem heads up to turn'  │ '127,494'   │ 7843.473771725035  │ '±1.10%' │ 63748   │
-│ 14      │ 'odds holdem heads up to river' │ '1,233,295' │ 810.8355357993083  │ '±1.46%' │ 616657  │
-│ 15      │ 'odds holdem multiway preflop'  │ '2'         │ 337363508.4000001  │ '±0.31%' │ 10      │
-│ 16      │ 'odds holdem multiway to flop'  │ '3,996'     │ 250215.8009003975  │ '±0.76%' │ 1999    │
-│ 17      │ 'odds holdem multiway to turn'  │ '78,286'    │ 12773.530732691279 │ '±0.95%' │ 39144   │
-│ 18      │ 'odds holdem multiway to river' │ '922,248'   │ 1084.3067497948107 │ '±1.47%' │ 461125  │
+│ 0       │ 'rank 7-card hands x1000'       │ '16,372'    │ 61077.9937706132   │ '±0.26%' │ 8187    │
+│ 1       │ 'evaluate high card'            │ '340,332'   │ 2938.300422525423  │ '±1.29%' │ 170167  │
+│ 2       │ 'evaluate one pair'             │ '325,759'   │ 3069.75316797688   │ '±1.31%' │ 162880  │
+│ 3       │ 'evaluate two pair'             │ '325,421'   │ 3072.9354684068126 │ '±1.27%' │ 162711  │
+│ 4       │ 'evaluate three of a kind'      │ '345,476'   │ 2894.554287104319  │ '±1.26%' │ 172739  │
+│ 5       │ 'evaluate straight'             │ '328,903'   │ 3040.4061914732306 │ '±0.37%' │ 164452  │
+│ 6       │ 'evaluate flush'                │ '249,473'   │ 4008.4464513298876 │ '±2.92%' │ 124737  │
+│ 7       │ 'evaluate full house'           │ '446,484'   │ 2239.7183114398313 │ '±1.20%' │ 223243  │
+│ 8       │ 'evaluate four of a kind'       │ '427,902'   │ 2336.9785559359784 │ '±0.99%' │ 213952  │
+│ 9       │ 'evaluate straight flush'       │ '398,958'   │ 2506.528769802396  │ '±1.03%' │ 199480  │
+│ 10      │ 'evaluate royal flush'          │ '372,981'   │ 2681.100219315566  │ '±1.06%' │ 186491  │
+│ 11      │ 'odds holdem heads up preflop'  │ '3'         │ 283549779.0000005  │ '±0.30%' │ 10      │
+│ 12      │ 'odds holdem heads up to flop'  │ '6,150'     │ 162584.4184005291  │ '±0.58%' │ 3076    │
+│ 13      │ 'odds holdem heads up to turn'  │ '124,608'   │ 8025.122975687491  │ '±0.80%' │ 62305   │
+│ 14      │ 'odds holdem heads up to river' │ '1,260,349' │ 793.4309358505037  │ '±1.23%' │ 630175  │
+│ 15      │ 'odds holdem multiway preflop'  │ '2'         │ 342823091.5999996  │ '±1.16%' │ 10      │
+│ 16      │ 'odds holdem multiway to flop'  │ '3,928'     │ 254575.22900766262 │ '±0.74%' │ 1965    │
+│ 17      │ 'odds holdem multiway to turn'  │ '74,925'    │ 13346.607292525083 │ '±0.70%' │ 37463   │
+│ 18      │ 'odds holdem multiway to river' │ '941,488'   │ 1062.1473133077866 │ '±1.22%' │ 470745  │
 └─────────┴─────────────────────────────────┴─────────────┴────────────────────┴──────────┴─────────┘
-odds omaha heads up preflop (single run): 7986ms
+odds omaha heads up preflop (single run): 144ms
 ```
 
 For comparison, v3 measured 60 ops/sec for `odds holdem heads up to flop` (now 6,266) and could not complete preflop calculations at all; exact heads-up preflop odds now take under 300ms.
