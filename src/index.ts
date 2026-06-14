@@ -15,10 +15,7 @@ export { oddsOmaha } from './helpers/oddsOmaha';
 export { oddsPineapple } from './helpers/oddsPineapple';
 export { oddsStud } from './helpers/oddsStud';
 
-export { simulateHoldem, simulateHoldem as oddsHoldemAsync } from './helpers/simulateHoldem';
-export { simulateOmaha, simulateOmaha as oddsOmahaAsync } from './helpers/simulateOmaha';
-export {
-  simulatePineapple,
-  simulatePineapple as oddsPineappleAsync,
-} from './helpers/simulatePineapple';
-export { simulateStud, simulateStud as oddsStudAsync } from './helpers/simulateStud';
+export { simulateHoldem } from './helpers/simulateHoldem';
+export { simulateOmaha } from './helpers/simulateOmaha';
+export { simulatePineapple } from './helpers/simulatePineapple';
+export { simulateStud } from './helpers/simulateStud';

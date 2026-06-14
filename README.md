@@ -275,7 +275,7 @@ const allHoleCards = [
 const result = oddsStud(allHoleCards);
 ```
 
-#### `simulateHoldem` (alias: `oddsHoldemAsync`)
+#### `simulateHoldem`
 
 Estimates the odds of winning or tying a hand of Texas Hold'em.
 
@@ -297,7 +297,7 @@ for (const result of generate) {
 }
 ```
 
-#### `simulateOmaha` (alias: `oddsOmahaAsync`)
+#### `simulateOmaha`
 
 Estimates the odds of winning or tying a hand of Omaha.
 
@@ -319,7 +319,7 @@ for (const result of generate) {
 }
 ```
 
-#### `simulatePineapple` (alias: `oddsPineappleAsync`)
+#### `simulatePineapple`
 
 Estimates the odds of winning or tying a hand of Pineapple.
 
@@ -341,7 +341,7 @@ for (const result of generate) {
 }
 ```
 
-#### `simulateStud` (alias: `oddsStudAsync`)
+#### `simulateStud`
 
 Estimates the odds of winning or tying a hand of Stud.
 
