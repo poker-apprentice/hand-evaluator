@@ -112,7 +112,7 @@ const result = [
 
 Given a list of hands and community cards, determine exactly how often each hand will win or tie by exhaustively enumerating every possible combination of the unknown cards (any unspecified hole cards plus the remaining community cards).
 
-Exact enumeration is fast enough for any hold'em scenario, including exact preflop odds, as well as omaha/pineapple/stud scenarios with a typical number of unknown cards. Because the work grows combinatorially with the number of unknown cards, `odds` throws if a calculation would require more than `maximumEvaluations` hand evaluations (500 million by default, roughly several seconds of computation); the [`simulate`](#simulate-alias-oddsasync) function handles such scenarios in bounded time instead.
+Exact enumeration is fast enough for any hold'em scenario, including exact preflop odds, as well as omaha/pineapple/stud scenarios with a typical number of unknown cards. Because the work grows combinatorially with the number of unknown cards, `odds` throws if a calculation would require more than `maximumEvaluations` hand evaluations (500 million by default, roughly several seconds of computation); the [`simulate`](#simulate) function handles such scenarios in bounded time instead.
 
 ```ts
 import { Hand, odds } from '@poker-apprentice/hand-evaluator';
@@ -281,14 +281,20 @@ Estimates the odds of winning or tying a hand of Texas Hold'em.
 
 ```ts
 import { simulateHoldem } from '@poker-apprentice/hand-evaluator';
-const abort = simulateHoldem({
+const generate = simulateHoldem({
   allHoleCards: [
     ['As', 'Kd'],
     ['Ks', '8s'],
   ],
   communityCards: ['Ts', 'Qs', 'Jd'],
-  callback: (result) => console.log(result),
+  samplesPerUpdate: 1000,
 });
+for (const result of generate) {
+  console.log(result);
+  if (result[0].total >= 10000) {
+    break;
+  }
+}
 ```
 
 #### `simulateOmaha` (alias: `oddsOmahaAsync`)
@@ -297,14 +303,20 @@ Estimates the odds of winning or tying a hand of Omaha.
 
 ```ts
 import { simulateOmaha } from '@poker-apprentice/hand-evaluator';
-const abort = simulateOmaha({
+const generate = simulateOmaha({
   allHoleCards: [
     ['As', 'Kd', 'Td', 'Tc'],
     ['Ks', '8s', '9h', 'Kc'],
   ],
   communityCards: ['Ts', 'Qs', 'Jd'],
-  callback: (result) => console.log(result),
+  samplesPerUpdate: 1000,
 });
+for (const result of generate) {
+  console.log(result);
+  if (result[0].total >= 10000) {
+    break;
+  }
+}
 ```
 
 #### `simulatePineapple` (alias: `oddsPineappleAsync`)
@@ -313,14 +325,20 @@ Estimates the odds of winning or tying a hand of Pineapple.
 
 ```ts
 import { simulatePineapple } from '@poker-apprentice/hand-evaluator';
-const abort = simulatePineapple({
+const generate = simulatePineapple({
   allHoleCards: [
     ['As', 'Kd', 'Td'],
     ['Ks', '8s', 'Kc'],
   ],
   communityCards: ['Ts', 'Qs', 'Jd'],
-  callback: (result) => console.log(result),
+  samplesPerUpdate: 1000,
 });
+for (const result of generate) {
+  console.log(result);
+  if (result[0].total >= 10000) {
+    break;
+  }
+}
 ```
 
 #### `simulateStud` (alias: `oddsStudAsync`)
@@ -329,13 +347,19 @@ Estimates the odds of winning or tying a hand of Stud.
 
 ```ts
 import { simulateStud } from '@poker-apprentice/hand-evaluator';
-const abort = simulateStud({
+const generate = simulateStud({
   allHoleCards: [
     ['As', 'Kd', 'Ks', '8s', 'Ac'],
     ['9s', '8s', 'Ts', '6s', '4h'],
   ],
-  callback: (result) => console.log(result),
+  samplesPerUpdate: 1000,
 });
+for (const result of generate) {
+  console.log(result);
+  if (result[0].total >= 10000) {
+    break;
+  }
+}
 ```
 
 ## Benchmarks
@@ -369,7 +393,7 @@ Benchmarked on an Apple M3 Pro MacBook Pro with 36 GB RAM using macOS 26.3. The 
 odds omaha heads up preflop (single run): 136ms
 ```
 
-For comparison, v3 measured 60 ops/sec for `odds holdem heads up to flop` (now 6,266) and could not complete preflop calculations at all; exact heads-up preflop odds now take under 300ms.
+For comparison, v3 measured 60 ops/sec for `odds holdem heads up to flop` (now 6,713) and could not complete preflop calculations at all; exact heads-up preflop odds now take under 300ms.
 
 ## Development
 
