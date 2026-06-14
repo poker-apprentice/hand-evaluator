@@ -108,7 +108,34 @@ const result = [
 ].sort(compare);
 ```
 
-#### `simulate` (alias: `oddsAsync`)
+#### `odds`
+
+Given a list of hands and community cards, determine exactly how often each hand will win or tie by exhaustively enumerating every possible combination of the unknown cards (any unspecified hole cards plus the remaining community cards).
+
+Exact enumeration is fast enough for any hold'em scenario, including exact preflop odds, as well as omaha/pineapple/stud scenarios with a typical number of unknown cards. Because the work grows combinatorially with the number of unknown cards, `odds` throws if a calculation would require more than `maximumEvaluations` hand evaluations (500 million by default, roughly several seconds of computation); the [`simulate`](#simulate-alias-oddsasync) function handles such scenarios in bounded time instead.
+
+```ts
+import { Hand, odds } from '@poker-apprentice/hand-evaluator';
+
+const hand1: Hand = ['As', 'Ks'];
+const hand2: Hand = ['Jd', 'Jh'];
+
+const result = odds([hand1, hand2], {
+  communityCards: ['Qd', 'Js', '8d'],
+  expectedCommunityCardCount: 5,
+  expectedHoleCardCount: 2,
+  minimumHoleCardsUsed: 0,
+  maximumHoleCardsUsed: 2,
+});
+
+console.log(result);
+// => [
+//      { wins: 149, ties: 0, total: 990, equity: 0.1505... },
+//      { wins: 841, ties: 0, total: 990, equity: 0.8494... },
+//    ]
+```
+
+#### `simulate`
 
 Given a list of hands and community cards, estimate how often each hand will win or tie using a [Monte Carlo simulation](https://en.wikipedia.org/wiki/Monte_Carlo_method) for roughly estimating the odds of a hand winning or tying.
 
@@ -140,33 +167,6 @@ for (const result of generate) {
 // => "13.8" [{ wins: 138, ties: 0, total: 1000, equity: 0.138 }, ...]
 // => "14.4" [{ wins: 288, ties: 0, total: 2000, equity: 0.144 }, ...]
 // => "15.1" [{ wins: 453, ties: 0, total: 3000, equity: 0.151 }, ...]
-```
-
-#### `odds`
-
-Given a list of hands and community cards, determine exactly how often each hand will win or tie by exhaustively enumerating every possible combination of the unknown cards (any unspecified hole cards plus the remaining community cards).
-
-Exact enumeration is fast enough for any hold'em scenario, including exact preflop odds, as well as omaha/pineapple/stud scenarios with a typical number of unknown cards. Because the work grows combinatorially with the number of unknown cards, `odds` throws if a calculation would require more than `maximumEvaluations` hand evaluations (500 million by default, roughly several seconds of computation); the [`simulate`](#simulate-alias-oddsasync) function handles such scenarios in bounded time instead.
-
-```ts
-import { Hand, odds } from '@poker-apprentice/hand-evaluator';
-
-const hand1: Hand = ['As', 'Ks'];
-const hand2: Hand = ['Jd', 'Jh'];
-
-const result = odds([hand1, hand2], {
-  communityCards: ['Qd', 'Js', '8d'],
-  expectedCommunityCardCount: 5,
-  expectedHoleCardCount: 2,
-  minimumHoleCardsUsed: 0,
-  maximumHoleCardsUsed: 2,
-});
-
-console.log(result);
-// => [
-//      { wins: 149, ties: 0, total: 990, equity: 0.1505... },
-//      { wins: 841, ties: 0, total: 990, equity: 0.8494... },
-//    ]
 ```
 
 ### Helper Functions

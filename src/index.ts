@@ -3,7 +3,7 @@ export * from './types';
 export { compare } from './compare';
 export { evaluate } from './evaluate';
 export { odds } from './odds';
-export { simulate, simulate as oddsAsync } from './simulate';
+export { simulate } from './simulate';
 
 export { evaluateHoldem } from './helpers/evaluateHoldem';
 export { evaluateOmaha } from './helpers/evaluateOmaha';
