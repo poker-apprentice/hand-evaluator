@@ -2,6 +2,7 @@ import { HandStrength } from '@poker-apprentice/types';
 import { handToIds } from '../../core/cards';
 import { bestRankForPlan, compilePlan } from '../../core/plan';
 import { handStrengthFromRank } from '../../core/rank';
+import { InsufficientCardsError, UnsatisfiableHandError } from '../../errors';
 
 describe('compilePlan', () => {
   it('compiles holdem (use any of 2 hole cards) to a single evaluation', () => {
@@ -35,13 +36,11 @@ describe('compilePlan', () => {
   });
 
   it('throws when fewer than 5 cards are available', () => {
-    expect(() => compilePlan(2, 0, 0, 2)).toThrow('Cannot evaluate hands of fewer than 5 cards');
+    expect(() => compilePlan(2, 0, 0, 2)).toThrow(InsufficientCardsError);
   });
 
   it('throws when constraints cannot produce a 5-card hand', () => {
-    expect(() => compilePlan(4, 2, 0, 2)).toThrow(
-      'Hole card usage constraints cannot produce a 5-card hand',
-    );
+    expect(() => compilePlan(4, 2, 0, 2)).toThrow(UnsatisfiableHandError);
   });
 });
 

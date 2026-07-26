@@ -1,6 +1,7 @@
+import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../errors';
 import { simulate, SimulateOptions } from '../simulate';
 
-type Options = Omit<
+export type SimulateHoldemOptions = Omit<
   SimulateOptions,
   | 'expectedCommunityCardCount'
   | 'expectedHoleCardCount'
@@ -8,12 +9,17 @@ type Options = Omit<
   | 'maximumHoleCardsUsed'
 >;
 
-export const simulateHoldem = (options: Options) => {
-  if (options.allHoleCards.some((holeCards) => holeCards.length > 2)) {
-    throw new Error('Each collection of hole cards accept a maximum of 2 elements');
+export const simulateHoldem = (options: SimulateHoldemOptions) => {
+  const invalidHandIndex = options.allHoleCards.findIndex((holeCards) => holeCards.length > 2);
+  if (invalidHandIndex !== -1) {
+    throw new InvalidHoleCardCountError(
+      2,
+      options.allHoleCards[invalidHandIndex].length,
+      invalidHandIndex,
+    );
   }
   if (options.communityCards && options.communityCards.length > 5) {
-    throw new Error('communityCards accepts a maximum of 5 elements');
+    throw new InvalidCommunityCardCountError(5, options.communityCards.length);
   }
   return simulate({
     ...options,

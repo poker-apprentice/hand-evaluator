@@ -1,4 +1,5 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../../errors';
 import { simulateOmaha } from '../../helpers/simulateOmaha';
 import * as simulateModule from '../../simulate';
 
@@ -33,7 +34,7 @@ describe('simulateOmaha', () => {
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
     expect(() => simulateOmaha({ allHoleCards, communityCards })).toThrow(
-      'Each collection of hole cards accept a maximum of 4 elements',
+      InvalidHoleCardCountError,
     );
   });
 
@@ -45,7 +46,7 @@ describe('simulateOmaha', () => {
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
     expect(() => simulateOmaha({ allHoleCards, communityCards })).toThrow(
-      'communityCards accepts a maximum of 5 elements',
+      InvalidCommunityCardCountError,
     );
   });
 });

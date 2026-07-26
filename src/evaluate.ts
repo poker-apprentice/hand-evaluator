@@ -4,6 +4,12 @@ import { handToIds } from './core/cards';
 import { HAND_SIZE } from './core/constants';
 import { GamePlan, compilePlan } from './core/plan';
 import { WORST_RANK, rankN } from './core/rank';
+import {
+  InsufficientCardsError,
+  InvalidHoleCardConstraintsError,
+  NoCardsSuppliedError,
+  UnsatisfiableHandError,
+} from './errors';
 import { EvaluatedHand } from './types';
 import { describeHand } from './utils/describeHand';
 import { getCombinations } from './utils/getCombinations';
@@ -103,25 +109,30 @@ export const evaluate = ({
     HAND_SIZE,
   );
 
+  const constraints = { minimumHoleCards, maximumHoleCards, holeCardCount: holeCards.length };
+
   if (holeCards.length === 0 && communityCards.length === 0) {
-    throw new Error('Must supply at least one holeCard or communityCard');
+    throw new NoCardsSuppliedError();
   }
   if (minimumHoleCards > holeCards.length) {
-    throw new Error('minimumHoleCards cannot be greater than number of supplied hole cards');
+    throw new InvalidHoleCardConstraintsError('minimumExceedsSuppliedHoleCards', constraints);
   }
   if (minimumHoleCards > maximumHoleCards) {
-    throw new Error('minimumHoleCards cannot be greater than maximumHoleCards');
+    throw new InvalidHoleCardConstraintsError('minimumExceedsMaximum', constraints);
   }
   if (maximumHoleCards <= 0) {
-    throw new Error('maximumHoleCards cannot be less then or equal to zero');
+    throw new InvalidHoleCardConstraintsError('maximumNotPositive', constraints);
   }
 
   let plan: GamePlan;
   try {
     plan = compilePlan(holeCards.length, communityCards.length, minimumHoleCards, maximumHoleCards);
-  } catch {
-    // Fewer than 5 cards total (or constraints that only permit partial hands): describe every
-    // candidate combination and keep the best.
+  } catch (error) {
+    // Fewer than 5 cards total, or constraints that only permit partial hands: describe every
+    // candidate combination and keep the best.  Any other failure is a genuine error.
+    if (!(error instanceof InsufficientCardsError) && !(error instanceof UnsatisfiableHandError)) {
+      throw error;
+    }
     return getAllHandCombinations({
       holeCards,
       communityCards,

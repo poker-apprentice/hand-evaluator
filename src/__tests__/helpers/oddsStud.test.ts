@@ -1,4 +1,5 @@
 import { Hand } from '@poker-apprentice/types';
+import { InvalidHoleCardCountError } from '../../errors';
 import { oddsStud } from '../../helpers/oddsStud';
 import * as oddsModule from '../../odds';
 
@@ -26,8 +27,6 @@ describe('oddsStud', () => {
       ['Jd', 'Jh', '2h', 'Jc', '2s', '3c', '4h', '5d'],
     ];
 
-    expect(() => oddsStud(allHoleCards)).toThrow(
-      'Each collection of hole cards accept a maximum of 7 elements',
-    );
+    expect(() => oddsStud(allHoleCards)).toThrow(InvalidHoleCardCountError);
   });
 });

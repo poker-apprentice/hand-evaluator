@@ -1,4 +1,5 @@
 import { Card } from '@poker-apprentice/types';
+import { InvalidHoleCardCountError } from '../../errors';
 import * as evaluateModel from '../../evaluate';
 import { evaluateStud } from '../../helpers/evaluateStud';
 
@@ -18,6 +19,6 @@ describe('evaluatePineapple', () => {
   it('throws if too many hole cards are provided', () => {
     const holeCards: Card[] = ['As', 'Kd', 'Ts', 'Tc', 'Qd', '2d', '2s', '8c'];
 
-    expect(() => evaluateStud({ holeCards })).toThrow('holeCards accepts a maximum of 7 elements');
+    expect(() => evaluateStud({ holeCards })).toThrow(InvalidHoleCardCountError);
   });
 });

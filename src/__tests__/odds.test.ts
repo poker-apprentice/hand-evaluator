@@ -1,4 +1,9 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import {
+  DuplicateCardError,
+  InvalidHoleCardCountError,
+  MaximumEvaluationsExceededError,
+} from '../errors';
 import { odds } from '../odds';
 
 // Expected counts are on a combination basis: every distinct deal of the unknown cards counts
@@ -195,7 +200,7 @@ describe('odds', () => {
       ];
 
       expect(() => odds(hands, { ...holdemOptions, communityCards: [] })).toThrow(
-        'Duplicate card: As',
+        DuplicateCardError,
       );
     });
 
@@ -203,10 +208,10 @@ describe('odds', () => {
       const hands: Hand[] = [
         ['As', 'Ks', 'Qs'],
         ['Jd', 'Jh'],
-      ] as Hand[];
+      ];
 
       expect(() => odds(hands, { ...holdemOptions, communityCards: [] })).toThrow(
-        'Each collection of hole cards accepts a maximum of 2 elements',
+        InvalidHoleCardCountError,
       );
     });
 
@@ -218,7 +223,7 @@ describe('odds', () => {
 
       expect(() =>
         odds(hands, { ...holdemOptions, communityCards: [], maximumEvaluations: 1000 }),
-      ).toThrow(/exceeds maximumEvaluations \(1000\)/);
+      ).toThrow(MaximumEvaluationsExceededError);
     });
 
     it('returns no odds when no hands are provided', () => {

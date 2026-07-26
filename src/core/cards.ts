@@ -1,4 +1,5 @@
 import { ALL_CARDS, Card } from '@poker-apprentice/types';
+import { InvalidCardError } from '../errors';
 
 // Cards are represented internally as integers 0-51, where `id = rankIndex * SUIT_COUNT +
 // suitIndex` with ranks ordered 2..A and suits ordered c, d, h, s.  This matches the ordering
@@ -14,7 +15,7 @@ const CARD_IDS = new Map<Card, number>(ALL_CARDS.map((card, id) => [card, id]));
 export const cardToId = (card: Card): number => {
   const id = CARD_IDS.get(card);
   if (id === undefined) {
-    throw new Error(`Invalid card: ${card}`);
+    throw new InvalidCardError(card);
   }
   return id;
 };

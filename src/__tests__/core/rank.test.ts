@@ -1,6 +1,7 @@
 import { Card, HandStrength } from '@poker-apprentice/types';
 import { cardToId, handToIds, idToCard } from '../../core/cards';
 import { handStrengthFromRank, rankN } from '../../core/rank';
+import { InvalidCardError } from '../../errors';
 import { referenceBest, referenceCompare } from '../fixtures/referenceEvaluate';
 
 const rankOf = (cards: Card[]): number => {
@@ -48,7 +49,7 @@ describe('cards', () => {
   });
 
   it('throws on invalid cards', () => {
-    expect(() => cardToId('Xx' as Card)).toThrow('Invalid card: Xx');
+    expect(() => cardToId('Xx' as Card)).toThrow(InvalidCardError);
   });
 });
 

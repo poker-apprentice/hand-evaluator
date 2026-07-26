@@ -1,13 +1,17 @@
+import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../errors';
 import { evaluate, EvaluateOptions } from '../evaluate';
 
-type Options = Omit<EvaluateOptions, 'minimumHoleCards' | 'maximumHoleCards'>;
+export type EvaluatePineappleOptions = Omit<
+  EvaluateOptions,
+  'minimumHoleCards' | 'maximumHoleCards'
+>;
 
-export const evaluatePineapple = (options: Options) => {
+export const evaluatePineapple = (options: EvaluatePineappleOptions) => {
   if (options.holeCards.length > 3) {
-    throw new Error('holeCards accepts a maximum of 3 elements');
+    throw new InvalidHoleCardCountError(3, options.holeCards.length);
   }
   if (options.communityCards && options.communityCards.length > 5) {
-    throw new Error('communityCards accepts a maximum of 5 elements');
+    throw new InvalidCommunityCardCountError(5, options.communityCards.length);
   }
   return evaluate({ minimumHoleCards: 0, maximumHoleCards: 2, ...options });
 };

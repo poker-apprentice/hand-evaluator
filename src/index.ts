@@ -1,21 +1,22 @@
+export * from './errors';
 export * from './types';
 
-export { compare } from './compare';
-export { evaluate } from './evaluate';
-export { odds } from './odds';
-export { simulate } from './simulate';
+export * from './compare';
+export * from './evaluate';
+export * from './odds';
+export * from './simulate';
 
-export { evaluateHoldem } from './helpers/evaluateHoldem';
-export { evaluateOmaha } from './helpers/evaluateOmaha';
-export { evaluatePineapple } from './helpers/evaluatePineapple';
-export { evaluateStud } from './helpers/evaluateStud';
+export * from './helpers/evaluateHoldem';
+export * from './helpers/evaluateOmaha';
+export * from './helpers/evaluatePineapple';
+export * from './helpers/evaluateStud';
 
-export { oddsHoldem } from './helpers/oddsHoldem';
-export { oddsOmaha } from './helpers/oddsOmaha';
-export { oddsPineapple } from './helpers/oddsPineapple';
-export { oddsStud } from './helpers/oddsStud';
+export * from './helpers/oddsHoldem';
+export * from './helpers/oddsOmaha';
+export * from './helpers/oddsPineapple';
+export * from './helpers/oddsStud';
 
-export { simulateHoldem } from './helpers/simulateHoldem';
-export { simulateOmaha } from './helpers/simulateOmaha';
-export { simulatePineapple } from './helpers/simulatePineapple';
-export { simulateStud } from './helpers/simulateStud';
+export * from './helpers/simulateHoldem';
+export * from './helpers/simulateOmaha';
+export * from './helpers/simulatePineapple';
+export * from './helpers/simulateStud';

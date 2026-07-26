@@ -1,4 +1,10 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import {
+  DeckExhaustedError,
+  DuplicateCardError,
+  InvalidCommunityCardCountError,
+  InvalidHoleCardCountError,
+} from '../errors';
 import { Odds } from '../types';
 import { cardToId } from './cards';
 import { CARD_COUNT } from './constants';
@@ -86,7 +92,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
   );
 
   if (communityCards.length > expectedCommunityCardCount) {
-    throw new Error(`communityCards accepts a maximum of ${expectedCommunityCardCount} elements`);
+    throw new InvalidCommunityCardCountError(expectedCommunityCardCount, communityCards.length);
   }
 
   // Convert all known cards to ids, rejecting duplicates.
@@ -94,7 +100,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
   const claim = (card: Card): number => {
     const id = cardToId(card);
     if (seen[id] !== 0) {
-      throw new Error(`Duplicate card: ${card}`);
+      throw new DuplicateCardError(card);
     }
     seen[id] = 1;
     return id;
@@ -103,11 +109,9 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
   const holeBuffers: Uint8Array[] = [];
   const groups: Group[] = [];
   let playerGroupCount = 0;
-  allHoleCards.forEach((holeCards) => {
+  allHoleCards.forEach((holeCards, handIndex) => {
     if (holeCards.length > expectedHoleCardCount) {
-      throw new Error(
-        `Each collection of hole cards accepts a maximum of ${expectedHoleCardCount} elements`,
-      );
+      throw new InvalidHoleCardCountError(expectedHoleCardCount, holeCards.length, handIndex);
     }
     const buffer = new Uint8Array(expectedHoleCardCount);
     holeCards.forEach((card, index) => {
@@ -148,7 +152,7 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
 
   const unknownCount = groups.reduce((sum, group) => sum + group.targets.length, 0);
   if (unknownCount > deckSize) {
-    throw new Error('Not enough cards remain in the deck to complete every hand');
+    throw new DeckExhaustedError(unknownCount, deckSize);
   }
 
   let scenarioCount = 1;

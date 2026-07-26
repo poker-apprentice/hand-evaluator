@@ -1,3 +1,8 @@
+import {
+  InsufficientCardsError,
+  InvalidHoleCardConstraintsError,
+  UnsatisfiableHandError,
+} from '../errors';
 import { HAND_SIZE, MAX_RANKABLE_CARDS } from './constants';
 import { WORST_RANK, rankN } from './rank';
 
@@ -77,10 +82,14 @@ export const compilePlan = (
   const totalCards = holeCount + communityCount;
 
   if (totalCards < HAND_SIZE) {
-    throw new Error(`Cannot evaluate hands of fewer than ${HAND_SIZE} cards`);
+    throw new InsufficientCardsError(HAND_SIZE, totalCards);
   }
   if (minUsed > maxUsed) {
-    throw new Error('minimumHoleCardsUsed cannot be greater than maximumHoleCardsUsed');
+    throw new InvalidHoleCardConstraintsError('minimumExceedsMaximum', {
+      minimumHoleCards: minUsed,
+      maximumHoleCards: maxUsed,
+      holeCardCount: holeCount,
+    });
   }
 
   const basePlan = {
@@ -125,7 +134,7 @@ export const compilePlan = (
     }
   }
   if (pairedSubsets.length === 0) {
-    throw new Error('Hole card usage constraints cannot produce a 5-card hand');
+    throw new UnsatisfiableHandError(minUsed, maxUsed, communityCount);
   }
   return {
     ...basePlan,
