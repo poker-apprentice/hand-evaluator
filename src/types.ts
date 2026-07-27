@@ -5,7 +5,7 @@ export interface EvaluatedHand {
   hand: Hand;
 }
 
-export interface Odds {
+export interface EquityResult {
   /** Number of evaluated scenarios in which this hand is the sole winner. */
   wins: number;
   /** Number of evaluated scenarios in which this hand ties for the win. */
@@ -18,3 +18,6 @@ export interface Odds {
    */
   equity: number;
 }
+
+/** @deprecated Use {@link EquityResult} instead. */
+export type Odds = EquityResult;

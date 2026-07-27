@@ -3,8 +3,8 @@ import { HandStrength } from '@poker-apprentice/types';
 import { Bench } from 'tinybench';
 import { rankN } from '../src/core/rank';
 import { EvaluateOptions as EvaluateHandOptions, evaluate as evaluateHand } from '../src/evaluate';
-import { oddsHoldem } from '../src/helpers/oddsHoldem';
-import { oddsOmaha } from '../src/helpers/oddsOmaha';
+import { equityHoldem } from '../src/helpers/equityHoldem';
+import { equityOmaha } from '../src/helpers/equityOmaha';
 
 interface EvaluateOptions extends EvaluateHandOptions {
   strength: HandStrength;
@@ -100,7 +100,7 @@ const benchmarkEvaluate = (bench: Bench) => {
     });
 };
 
-const benchmarkOdds = (bench: Bench) => {
+const benchmarkEquity = (bench: Bench) => {
   const allHoleCardsHeadsUp = [
     ['Tc' as const, 'Kc' as const],
     ['Ah' as const, 'Ad' as const],
@@ -113,29 +113,29 @@ const benchmarkOdds = (bench: Bench) => {
   ];
 
   bench
-    .add('odds holdem heads up preflop', () => {
-      oddsHoldem(allHoleCardsHeadsUp, []);
+    .add('equity holdem heads up preflop', () => {
+      equityHoldem(allHoleCardsHeadsUp, []);
     })
-    .add('odds holdem heads up to flop', () => {
-      oddsHoldem(allHoleCardsHeadsUp, ['Qc', 'Jc', '3d']);
+    .add('equity holdem heads up to flop', () => {
+      equityHoldem(allHoleCardsHeadsUp, ['Qc', 'Jc', '3d']);
     })
-    .add('odds holdem heads up to turn', () => {
-      oddsHoldem(allHoleCardsHeadsUp, ['Qc', 'Jc', '3d', 'Kd']);
+    .add('equity holdem heads up to turn', () => {
+      equityHoldem(allHoleCardsHeadsUp, ['Qc', 'Jc', '3d', 'Kd']);
     })
-    .add('odds holdem heads up to river', () => {
-      oddsHoldem(allHoleCardsHeadsUp, ['Qc', 'Jc', '3d', 'Kd', 'Ac']);
+    .add('equity holdem heads up to river', () => {
+      equityHoldem(allHoleCardsHeadsUp, ['Qc', 'Jc', '3d', 'Kd', 'Ac']);
     })
-    .add('odds holdem multiway preflop', () => {
-      oddsHoldem(allHoleCardsMultiway, []);
+    .add('equity holdem multiway preflop', () => {
+      equityHoldem(allHoleCardsMultiway, []);
     })
-    .add('odds holdem multiway to flop', () => {
-      oddsHoldem(allHoleCardsMultiway, ['Qc', 'Jc', '3d']);
+    .add('equity holdem multiway to flop', () => {
+      equityHoldem(allHoleCardsMultiway, ['Qc', 'Jc', '3d']);
     })
-    .add('odds holdem multiway to turn', () => {
-      oddsHoldem(allHoleCardsMultiway, ['Qc', 'Jc', '3d', 'Kd']);
+    .add('equity holdem multiway to turn', () => {
+      equityHoldem(allHoleCardsMultiway, ['Qc', 'Jc', '3d', 'Kd']);
     })
-    .add('odds holdem multiway to river', () => {
-      oddsHoldem(allHoleCardsMultiway, ['Qc', 'Jc', '3d', 'Kd', 'Ac']);
+    .add('equity holdem multiway to river', () => {
+      equityHoldem(allHoleCardsMultiway, ['Qc', 'Jc', '3d', 'Kd', 'Ac']);
     });
 };
 
@@ -143,14 +143,14 @@ const benchmarkOdds = (bench: Bench) => {
 // single run rather than including it in the benchmark table.
 const timeOmahaPreflop = () => {
   const start = Date.now();
-  oddsOmaha(
+  equityOmaha(
     [
       ['As', 'Ks', 'Qd', 'Jd'],
       ['9c', '9d', '6h', '6s'],
     ],
     [],
   );
-  console.log(`odds omaha heads up preflop (single run): ${Date.now() - start}ms`);
+  console.log(`equity omaha heads up preflop (single run): ${Date.now() - start}ms`);
 };
 
 (async () => {
@@ -158,7 +158,7 @@ const timeOmahaPreflop = () => {
 
   benchmarkRank(bench);
   benchmarkEvaluate(bench);
-  benchmarkOdds(bench);
+  benchmarkEquity(bench);
 
   await bench.warmup(); // make results more reliable, ref: https://github.com/tinylibs/tinybench/pull/50
   await bench.run();

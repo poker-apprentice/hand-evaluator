@@ -1,15 +1,15 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { equity } from '../equity';
 import {
   DuplicateCardError,
   InvalidHoleCardCountError,
   MaximumEvaluationsExceededError,
 } from '../errors';
-import { odds } from '../odds';
 
 // Expected counts are on a combination basis: every distinct deal of the unknown cards counts
 // once.  (v3 counted permutations instead, so its totals were larger by a factor of the
 // product of each unknown group's factorial; percentages are unchanged.)
-describe('odds', () => {
+describe('equity', () => {
   describe('game has community cards', () => {
     const holdemOptions = {
       expectedCommunityCardCount: 5,
@@ -25,7 +25,7 @@ describe('odds', () => {
       ];
 
       // v3 (permutation basis): wins 298/1682, total 1980
-      expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8d'] })).toEqual([
+      expect(equity(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8d'] })).toEqual([
         { wins: 149, ties: 0, total: 990, equity: 149 / 990 },
         { wins: 841, ties: 0, total: 990, equity: 841 / 990 },
       ]);
@@ -38,7 +38,7 @@ describe('odds', () => {
       ];
 
       // v3 (permutation basis): wins 90, ties 1800, total 1980
-      expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
+      expect(equity(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
         { wins: 45, ties: 900, total: 990, equity: (45 + 450) / 990 },
         { wins: 45, ties: 900, total: 990, equity: (45 + 450) / 990 },
       ]);
@@ -52,7 +52,7 @@ describe('odds', () => {
       ];
 
       // v3 (permutation basis): wins 58/56/1464, ties 228/228/0, total 1806
-      expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
+      expect(equity(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
         { wins: 29, ties: 114, total: 903, equity: (29 + 57) / 903 },
         { wins: 28, ties: 114, total: 903, equity: (28 + 57) / 903 },
         { wins: 732, ties: 0, total: 903, equity: 732 / 903 },
@@ -63,7 +63,7 @@ describe('odds', () => {
       const hands: Hand[] = [['As', 'Ks'], ['Ad']];
 
       // v3 (permutation basis): wins 59072/23736, ties 8272, total 91080
-      expect(odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
+      expect(equity(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h'] })).toEqual([
         { wins: 29536, ties: 4136, total: 45540, equity: (29536 + 2068) / 45540 },
         { wins: 11868, ties: 4136, total: 45540, equity: (11868 + 2068) / 45540 },
       ]);
@@ -76,7 +76,7 @@ describe('odds', () => {
       ];
 
       expect(
-        odds(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h', 'Th', '2s'] }),
+        equity(hands, { ...holdemOptions, communityCards: ['Qd', 'Js', '8h', 'Th', '2s'] }),
       ).toEqual([
         { wins: 1, ties: 0, total: 1, equity: 1 },
         { wins: 0, ties: 0, total: 1, equity: 0 },
@@ -90,7 +90,7 @@ describe('odds', () => {
       ];
 
       // AKs vs JJ is the classic near-coinflip: 46.1% vs 53.9% across all C(48,5) boards.
-      expect(odds(hands, { ...holdemOptions, communityCards: [] })).toEqual([
+      expect(equity(hands, { ...holdemOptions, communityCards: [] })).toEqual([
         { wins: 786618, ties: 6488, total: 1712304, equity: (786618 + 3244) / 1712304 },
         { wins: 919198, ties: 6488, total: 1712304, equity: (919198 + 3244) / 1712304 },
       ]);
@@ -109,7 +109,9 @@ describe('odds', () => {
       ];
 
       it('to the turn', () => {
-        expect(odds(hands, { ...omahaOptions, communityCards: ['9h', '6c', '2s', 'Td'] })).toEqual([
+        expect(
+          equity(hands, { ...omahaOptions, communityCards: ['9h', '6c', '2s', 'Td'] }),
+        ).toEqual([
           { wins: 13, ties: 0, total: 40, equity: 13 / 40 },
           { wins: 27, ties: 0, total: 40, equity: 27 / 40 },
         ]);
@@ -117,7 +119,7 @@ describe('odds', () => {
 
       it('to the river', () => {
         expect(
-          odds(hands, { ...omahaOptions, communityCards: ['9h', '6c', '2s', 'Td', 'Ad'] }),
+          equity(hands, { ...omahaOptions, communityCards: ['9h', '6c', '2s', 'Td', 'Ad'] }),
         ).toEqual([
           { wins: 0, ties: 0, total: 1, equity: 0 },
           { wins: 1, ties: 0, total: 1, equity: 1 },
@@ -127,14 +129,14 @@ describe('odds', () => {
       // The two largest cases exercise the board-subset memoization fast path; their expected
       // values were computed by the direct (unmemoized) evaluation path.
       it('with 3 community cards unknown', () => {
-        expect(odds(hands, { ...omahaOptions, communityCards: ['9h', '6c'] })).toEqual([
+        expect(equity(hands, { ...omahaOptions, communityCards: ['9h', '6c'] })).toEqual([
           { wins: 1697, ties: 0, total: 11480, equity: 1697 / 11480 },
           { wins: 9783, ties: 0, total: 11480, equity: 9783 / 11480 },
         ]);
       });
 
       it('preflop (exhaustive)', () => {
-        expect(odds(hands, { ...omahaOptions, communityCards: [] })).toEqual([
+        expect(equity(hands, { ...omahaOptions, communityCards: [] })).toEqual([
           { wins: 637498, ties: 0, total: 1086008, equity: 637498 / 1086008 },
           { wins: 448510, ties: 0, total: 1086008, equity: 448510 / 1086008 },
         ]);
@@ -148,7 +150,7 @@ describe('odds', () => {
       ];
 
       expect(
-        odds(hands, {
+        equity(hands, {
           expectedCommunityCardCount: 5,
           expectedHoleCardCount: 3,
           minimumHoleCardsUsed: 0,
@@ -178,7 +180,7 @@ describe('odds', () => {
       ];
 
       // unchanged from v3: each hand is missing one card, so each unknown group has size 1
-      expect(odds(hands, studOptions)).toEqual([
+      expect(equity(hands, studOptions)).toEqual([
         { wins: 1206, ties: 0, total: 1560, equity: 1206 / 1560 },
         { wins: 354, ties: 0, total: 1560, equity: 354 / 1560 },
       ]);
@@ -199,7 +201,7 @@ describe('odds', () => {
         ['As', 'Ad'],
       ];
 
-      expect(() => odds(hands, { ...holdemOptions, communityCards: [] })).toThrow(
+      expect(() => equity(hands, { ...holdemOptions, communityCards: [] })).toThrow(
         DuplicateCardError,
       );
     });
@@ -210,7 +212,7 @@ describe('odds', () => {
         ['Jd', 'Jh'],
       ];
 
-      expect(() => odds(hands, { ...holdemOptions, communityCards: [] })).toThrow(
+      expect(() => equity(hands, { ...holdemOptions, communityCards: [] })).toThrow(
         InvalidHoleCardCountError,
       );
     });
@@ -222,12 +224,12 @@ describe('odds', () => {
       ];
 
       expect(() =>
-        odds(hands, { ...holdemOptions, communityCards: [], maximumEvaluations: 1000 }),
+        equity(hands, { ...holdemOptions, communityCards: [], maximumEvaluations: 1000 }),
       ).toThrow(MaximumEvaluationsExceededError);
     });
 
-    it('returns no odds when no hands are provided', () => {
-      expect(odds([], { ...holdemOptions, communityCards: [] })).toEqual([]);
+    it('returns no results when no hands are provided', () => {
+      expect(equity([], { ...holdemOptions, communityCards: [] })).toEqual([]);
     });
   });
 
@@ -239,7 +241,7 @@ describe('odds', () => {
     ];
     const communityCards: Card[] = ['Qd', 'Jd', 'Th'];
 
-    const results = odds(hands, {
+    const results = equity(hands, {
       expectedCommunityCardCount: 5,
       expectedHoleCardCount: 2,
       minimumHoleCardsUsed: 0,

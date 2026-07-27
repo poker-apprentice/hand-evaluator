@@ -1,13 +1,16 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { EquityOptions, equity } from '../equity';
 import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../errors';
-import { OddsOptions, odds } from '../odds';
 
-export type OddsOmahaOptions = Pick<OddsOptions, 'maximumEvaluations'>;
+export type EquityOmahaOptions = Pick<EquityOptions, 'maximumEvaluations'>;
 
-export const oddsOmaha = (
+/** @deprecated Use {@link EquityOmahaOptions} instead. */
+export type OddsOmahaOptions = EquityOmahaOptions;
+
+export const equityOmaha = (
   allHoleCards: Hand[],
   communityCards: Card[],
-  options: OddsOmahaOptions = {},
+  options: EquityOmahaOptions = {},
 ) => {
   const invalidHandIndex = allHoleCards.findIndex((holeCards) => holeCards.length > 4);
   if (invalidHandIndex !== -1) {
@@ -16,7 +19,7 @@ export const oddsOmaha = (
   if (communityCards && communityCards.length > 5) {
     throw new InvalidCommunityCardCountError(5, communityCards.length);
   }
-  return odds(allHoleCards, {
+  return equity(allHoleCards, {
     communityCards,
     expectedCommunityCardCount: 5,
     expectedHoleCardCount: 4,
@@ -25,3 +28,6 @@ export const oddsOmaha = (
     maximumHoleCardsUsed: 2,
   });
 };
+
+/** @deprecated Use {@link equityOmaha} instead. */
+export const oddsOmaha = equityOmaha;

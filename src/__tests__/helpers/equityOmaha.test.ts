@@ -1,19 +1,19 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import * as equityModule from '../../equity';
 import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../../errors';
-import { oddsOmaha } from '../../helpers/oddsOmaha';
-import * as oddsModule from '../../odds';
+import { equityOmaha } from '../../helpers/equityOmaha';
 
-describe('oddsOmaha', () => {
-  it('delegates to `odds`', () => {
-    const oddsSpy = jest.spyOn(oddsModule, 'odds');
+describe('equityOmaha', () => {
+  it('delegates to `equity`', () => {
+    const equitySpy = jest.spyOn(equityModule, 'equity');
     const allHoleCards: Hand[] = [
       ['As', 'Kd', 'Ts', 'Td'],
       ['Jd', 'Jh', '2h', '5c'],
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    oddsOmaha(allHoleCards, communityCards);
-    expect(oddsSpy).toHaveBeenCalledWith(allHoleCards, {
+    equityOmaha(allHoleCards, communityCards);
+    expect(equitySpy).toHaveBeenCalledWith(allHoleCards, {
       communityCards,
       expectedCommunityCardCount: 5,
       expectedHoleCardCount: 4,
@@ -29,7 +29,7 @@ describe('oddsOmaha', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => oddsOmaha(allHoleCards, communityCards)).toThrow(InvalidHoleCardCountError);
+    expect(() => equityOmaha(allHoleCards, communityCards)).toThrow(InvalidHoleCardCountError);
   });
 
   it('throws if too many community cards are provided', () => {
@@ -39,6 +39,6 @@ describe('oddsOmaha', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
-    expect(() => oddsOmaha(allHoleCards, communityCards)).toThrow(InvalidCommunityCardCountError);
+    expect(() => equityOmaha(allHoleCards, communityCards)).toThrow(InvalidCommunityCardCountError);
   });
 });

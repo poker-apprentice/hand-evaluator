@@ -1,5 +1,5 @@
 import { Card, Hand } from '@poker-apprentice/types';
-import { odds } from '../odds';
+import { equity } from '../equity';
 import { simulate } from '../simulate';
 
 describe('simulate', () => {
@@ -30,8 +30,8 @@ describe('simulate', () => {
     expect(generate.next().value[0].total).toEqual(1000);
   });
 
-  it('converges toward the exact odds', () => {
-    const exact = odds(allHoleCards, options);
+  it('converges toward the exact equity', () => {
+    const exact = equity(allHoleCards, options);
 
     const generate = simulate({ ...options, samplesPerUpdate: 20000 });
     const results = generate.next().value;

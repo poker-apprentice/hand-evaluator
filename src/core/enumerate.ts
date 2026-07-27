@@ -5,7 +5,7 @@ import {
   InvalidCommunityCardCountError,
   InvalidHoleCardCountError,
 } from '../errors';
-import { Odds } from '../types';
+import { EquityResult } from '../types';
 import { cardToId } from './cards';
 import { CARD_COUNT } from './constants';
 import { GamePlan, bestRankForPlan, compilePlan } from './plan';
@@ -43,8 +43,8 @@ export interface Engine {
   enumerate: () => void;
   /** Deals one uniformly random scenario, tallying it into the accumulators. */
   sample: (random: () => number) => void;
-  /** Returns the accumulated odds for each hand. */
-  snapshot: () => Odds[];
+  /** Returns the accumulated equity results for each hand. */
+  snapshot: () => EquityResult[];
 }
 
 // Largest board-subset size for which board-subset memoization is considered; C(52,3) = 22,100
@@ -67,7 +67,7 @@ for (let k = 0; k <= MEMO_MAX_SUBSET_SIZE; k += 1) {
 }
 
 /**
- * Builds the shared engine behind `odds` and `simulate`: converts hands to integer card ids,
+ * Builds the shared engine behind `equity` and `simulate`: converts hands to integer card ids,
  * validates them, compiles the game plan, and prepares zero-allocation scenario enumeration
  * and sampling over the unknown (not-yet-dealt) cards.
  * @param {Hand[]} allHoleCards Each player's known hole cards.
@@ -370,8 +370,8 @@ export const createEngine = (allHoleCards: Hand[], options: EngineOptions): Engi
     tally();
   };
 
-  const snapshot = (): Odds[] => {
-    const results: Odds[] = [];
+  const snapshot = (): EquityResult[] => {
+    const results: EquityResult[] = [];
     for (let p = 0; p < players; p += 1) {
       results.push({
         wins: wins[p],

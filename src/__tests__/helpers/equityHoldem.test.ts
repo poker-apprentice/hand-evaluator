@@ -1,22 +1,22 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import * as equityModule from '../../equity';
 import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../../errors';
-import { oddsPineapple } from '../../helpers/oddsPineapple';
-import * as oddsModule from '../../odds';
+import { equityHoldem } from '../../helpers/equityHoldem';
 
-describe('oddsPineapple', () => {
-  it('delegates to `odds`', () => {
-    const oddsSpy = jest.spyOn(oddsModule, 'odds');
+describe('equityHoldem', () => {
+  it('delegates to `equity`', () => {
+    const equitySpy = jest.spyOn(equityModule, 'equity');
     const allHoleCards: Hand[] = [
-      ['As', 'Kd', 'Ts'],
-      ['Jd', 'Jh', '2h'],
+      ['As', 'Kd'],
+      ['Jd', 'Jh'],
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    oddsPineapple(allHoleCards, communityCards);
-    expect(oddsSpy).toHaveBeenCalledWith(allHoleCards, {
+    equityHoldem(allHoleCards, communityCards);
+    expect(equitySpy).toHaveBeenCalledWith(allHoleCards, {
       communityCards,
       expectedCommunityCardCount: 5,
-      expectedHoleCardCount: 3,
+      expectedHoleCardCount: 2,
       minimumHoleCardsUsed: 0,
       maximumHoleCardsUsed: 2,
     });
@@ -24,22 +24,22 @@ describe('oddsPineapple', () => {
 
   it('throws if too many hole cards are provided', () => {
     const allHoleCards: Hand[] = [
-      ['As', 'Kd', 'Ts', 'Td'],
-      ['Jd', 'Jh', '2h', '5c'],
+      ['As', 'Kd', 'Ks'],
+      ['Jd', 'Jh'],
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => oddsPineapple(allHoleCards, communityCards)).toThrow(InvalidHoleCardCountError);
+    expect(() => equityHoldem(allHoleCards, communityCards)).toThrow(InvalidHoleCardCountError);
   });
 
   it('throws if too many community cards are provided', () => {
     const allHoleCards: Hand[] = [
-      ['As', 'Kd', 'Ts'],
-      ['Jd', 'Jh', '2h'],
+      ['As', 'Kd'],
+      ['Jd', 'Jh'],
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
-    expect(() => oddsPineapple(allHoleCards, communityCards)).toThrow(
+    expect(() => equityHoldem(allHoleCards, communityCards)).toThrow(
       InvalidCommunityCardCountError,
     );
   });

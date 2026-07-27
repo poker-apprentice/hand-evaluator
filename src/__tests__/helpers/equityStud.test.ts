@@ -1,18 +1,18 @@
 import { Hand } from '@poker-apprentice/types';
+import * as equityModule from '../../equity';
 import { InvalidHoleCardCountError } from '../../errors';
-import { oddsStud } from '../../helpers/oddsStud';
-import * as oddsModule from '../../odds';
+import { equityStud } from '../../helpers/equityStud';
 
-describe('oddsStud', () => {
-  it('delegates to `odds`', () => {
-    const oddsSpy = jest.spyOn(oddsModule, 'odds');
+describe('equityStud', () => {
+  it('delegates to `equity`', () => {
+    const equitySpy = jest.spyOn(equityModule, 'equity');
     const allHoleCards: Hand[] = [
       ['As', 'Kd', 'Ts', 'Td', '2d', '5c', '5h'],
       ['Jd', 'Jh', '2h', 'Jc', '2s', '3c', '4h'],
     ];
 
-    oddsStud(allHoleCards);
-    expect(oddsSpy).toHaveBeenCalledWith(allHoleCards, {
+    equityStud(allHoleCards);
+    expect(equitySpy).toHaveBeenCalledWith(allHoleCards, {
       communityCards: [],
       expectedCommunityCardCount: 0,
       expectedHoleCardCount: 7,
@@ -27,6 +27,6 @@ describe('oddsStud', () => {
       ['Jd', 'Jh', '2h', 'Jc', '2s', '3c', '4h', '5d'],
     ];
 
-    expect(() => oddsStud(allHoleCards)).toThrow(InvalidHoleCardCountError);
+    expect(() => equityStud(allHoleCards)).toThrow(InvalidHoleCardCountError);
   });
 });
