@@ -222,7 +222,7 @@ export class InvalidHoleCardConstraintsError extends HandEvaluatorError {
 }
 
 /**
- * Thrown by `odds` when exact enumeration of the scenario would require more hand evaluations
+ * Thrown by `equity` when exact enumeration of the scenario would require more hand evaluations
  * than `maximumEvaluations` permits.
  */
 export class MaximumEvaluationsExceededError extends HandEvaluatorError {
@@ -234,7 +234,7 @@ export class MaximumEvaluationsExceededError extends HandEvaluatorError {
 
   constructor(requiredEvaluations: number, maximumEvaluations: number, options?: ErrorOptions) {
     const message =
-      `odds() would require ${requiredEvaluations} hand evaluations, which exceeds ` +
+      `equity() would require ${requiredEvaluations} hand evaluations, which exceeds ` +
       `maximumEvaluations (${maximumEvaluations}). Use simulate() for an approximate ` +
       `result, or increase options.maximumEvaluations.`;
 

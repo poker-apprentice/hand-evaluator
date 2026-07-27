@@ -15,6 +15,24 @@ Version 4 replaces the hand-evaluation core with an integer-based, lookup-table 
 
 Additionally, every failure is now reported as a named error class carrying structured properties rather than a bare `Error` with a message to parse — see [Errors](#errors). Code matching on `error.message` should switch to `instanceof` checks, as some wordings have changed.
 
+## Deprecations
+
+The `odds*` functions and the `Odds*` types have been renamed to `equity*` and `Equity*`, matching the `equity` value they report. The old names are still exported as aliases of the new ones and behave identically, but they are marked `@deprecated` and will be removed in a future major version.
+
+| Deprecated             | Replacement              |
+| ---------------------- | ------------------------ |
+| `odds`                 | `equity`                 |
+| `oddsHoldem`           | `equityHoldem`           |
+| `oddsOmaha`            | `equityOmaha`            |
+| `oddsPineapple`        | `equityPineapple`        |
+| `oddsStud`             | `equityStud`             |
+| `Odds`                 | `EquityResult`           |
+| `OddsOptions`          | `EquityOptions`          |
+| `OddsHoldemOptions`    | `EquityHoldemOptions`    |
+| `OddsOmahaOptions`     | `EquityOmahaOptions`     |
+| `OddsPineappleOptions` | `EquityPineappleOptions` |
+| `OddsStudOptions`      | `EquityStudOptions`      |
+
 ## Usage
 
 ### Types
@@ -22,7 +40,7 @@ Additionally, every failure is now reported as a named error class carrying stru
 The following types are defined & utilized by this package.
 
 - `EvaluatedHand`: An object representing the effective hand & strength, given a coordination of cards.
-- `Odds`: An object representing how a hand will perform given a scenario. Includes the number of `wins`, `ties`, and `total` evaluated outcomes, plus the hand's overall pot `equity` (between 0 and 1, with tied outcomes contributing a partial share).
+- `EquityResult`: An object representing how a hand will perform given a scenario. Includes the number of `wins`, `ties`, and `total` evaluated outcomes, plus the hand's overall pot `equity` (between 0 and 1, with tied outcomes contributing a partial share).
 
 ### Core Functions
 
@@ -110,19 +128,19 @@ const result = [
 ].sort(compare);
 ```
 
-#### `odds`
+#### `equity`
 
 Given a list of hands and community cards, determine exactly how often each hand will win or tie by exhaustively enumerating every possible combination of the unknown cards (any unspecified hole cards plus the remaining community cards).
 
-Exact enumeration is fast enough for any hold'em scenario, including exact preflop odds, as well as omaha/pineapple/stud scenarios with a typical number of unknown cards. Because the work grows combinatorially with the number of unknown cards, `odds` throws if a calculation would require more than `maximumEvaluations` hand evaluations (500 million by default, roughly several seconds of computation); the [`simulate`](#simulate) function handles such scenarios in bounded time instead.
+Exact enumeration is fast enough for any hold'em scenario, including exact preflop odds, as well as omaha/pineapple/stud scenarios with a typical number of unknown cards. Because the work grows combinatorially with the number of unknown cards, `equity` throws if a calculation would require more than `maximumEvaluations` hand evaluations (500 million by default, roughly several seconds of computation); the [`simulate`](#simulate) function handles such scenarios in bounded time instead.
 
 ```ts
-import { Hand, odds } from '@poker-apprentice/hand-evaluator';
+import { Hand, equity } from '@poker-apprentice/hand-evaluator';
 
 const hand1: Hand = ['As', 'Ks'];
 const hand2: Hand = ['Jd', 'Jh'];
 
-const result = odds([hand1, hand2], {
+const result = equity([hand1, hand2], {
   communityCards: ['Qd', 'Js', '8d'],
   expectedCommunityCardCount: 5,
   expectedHoleCardCount: 2,
@@ -173,7 +191,7 @@ for (const result of generate) {
 
 ### Helper Functions
 
-In addition to the core functions, there are some poker game-specific functions that wrap these core functions for ease of use. These functions are effectively the same as calling the `evaluate` of `odds` function directly with the appropriate option values prepopulated.
+In addition to the core functions, there are some poker game-specific functions that wrap these core functions for ease of use. These functions are effectively the same as calling the `evaluate` or `equity` function directly with the appropriate option values prepopulated.
 
 The functions also perform appropriate error checking/throwing to ensure that the `holeCards` and `communityCards` are of the correct length for each game. See [Errors](#errors) for the classes they throw.
 
@@ -222,59 +240,59 @@ import { evaluateStud } from '@poker-apprentice/hand-evaluator';
 const hand = evaluateStud({ holeCards: ['As', 'Kd', 'Ks', '8s', 'Ac', 'Kh', '4d'] });
 ```
 
-#### `oddsHoldem`
+#### `equityHoldem`
 
 Calculates the odds of winning or tying a hand of Texas Hold'em.
 
 ```ts
-import { oddsHoldem } from '@poker-apprentice/hand-evaluator';
+import { equityHoldem } from '@poker-apprentice/hand-evaluator';
 const allHoleCards = [
   ['As', 'Kd'],
   ['Ks', '8s'],
 ];
 const communityCards = ['Ts', 'Qs', 'Jd'];
-const result = oddsHoldem(allHoleCards, communityCards);
+const result = equityHoldem(allHoleCards, communityCards);
 ```
 
-#### `oddsOmaha`
+#### `equityOmaha`
 
 Calculates the odds of winning or tying a hand of Omaha.
 
 ```ts
-import { oddsOmaha } from '@poker-apprentice/hand-evaluator';
+import { equityOmaha } from '@poker-apprentice/hand-evaluator';
 const allHoleCards = [
   ['As', 'Kd', 'Td', 'Tc'],
   ['Ks', '8s', '9h', 'Kc'],
 ];
 const communityCards = ['Ts', 'Qs', 'Jd'];
-const result = oddsOmaha(allHoleCards, communityCards);
+const result = equityOmaha(allHoleCards, communityCards);
 ```
 
-#### `oddsPineapple`
+#### `equityPineapple`
 
 Calculates the odds of winning or tying a hand of Pineapple.
 
 ```ts
-import { oddsPineapple } from '@poker-apprentice/hand-evaluator';
+import { equityPineapple } from '@poker-apprentice/hand-evaluator';
 const allHoleCards = [
   ['As', 'Kd', 'Td'],
   ['Ks', '8s', 'Kc'],
 ];
 const communityCards = ['Ts', 'Qs', 'Jd'];
-const result = oddsPineapple(allHoleCards, communityCards);
+const result = equityPineapple(allHoleCards, communityCards);
 ```
 
-#### `oddsStud`
+#### `equityStud`
 
 Calculates the odds of winning or tying a hand of Stud.
 
 ```ts
-import { oddsStud } from '@poker-apprentice/hand-evaluator';
+import { equityStud } from '@poker-apprentice/hand-evaluator';
 const allHoleCards = [
   ['As', 'Kd', 'Ks', '8s', 'Ac'],
   ['9s', '8s', 'Ts', '6s', '4h'],
 ];
-const result = oddsStud(allHoleCards);
+const result = equityStud(allHoleCards);
 ```
 
 #### `simulateHoldem`
@@ -373,11 +391,11 @@ import {
   DuplicateCardError,
   HandEvaluatorError,
   MaximumEvaluationsExceededError,
-  oddsHoldem,
+  equityHoldem,
 } from '@poker-apprentice/hand-evaluator';
 
 try {
-  oddsHoldem(allHoleCards, communityCards);
+  equityHoldem(allHoleCards, communityCards);
 } catch (error) {
   if (error instanceof DuplicateCardError) {
     console.error(`${error.card} was supplied more than once`);
@@ -403,11 +421,11 @@ try {
 | `InsufficientCardsError`          | Too few cards are available to form a 5-card hand.                                      | `requiredCount`, `suppliedCount`                                  |
 | `UnsatisfiableHandError`          | The hole-card usage rules admit no valid 5-card hand.                                   | `minimumHoleCards`, `maximumHoleCards`, `communityCardCount`      |
 | `DeckExhaustedError`              | More unknown cards must be dealt than remain in the deck.                               | `requiredCount`, `remainingCount`                                 |
-| `MaximumEvaluationsExceededError` | `odds` would require more hand evaluations than `maximumEvaluations` permits.           | `requiredEvaluations`, `maximumEvaluations`                       |
+| `MaximumEvaluationsExceededError` | `equity` would require more hand evaluations than `maximumEvaluations` permits.         | `requiredEvaluations`, `maximumEvaluations`                       |
 
 `handIndex` is set only by functions accepting multiple hands, and identifies the offending entry in `allHoleCards`; it is `undefined` for single-hand functions such as `evaluateHoldem`.
 
-`InsufficientCardsError` and `UnsatisfiableHandError` never escape `evaluate`, which falls back to describing the best partial hand rather than throwing. They surface from `odds` and `simulate`, which require complete 5-card hands.
+`InsufficientCardsError` and `UnsatisfiableHandError` never escape `evaluate`, which falls back to describing the best partial hand rather than throwing. They surface from `equity` and `simulate`, which require complete 5-card hands.
 
 The `reason` property of `InvalidHoleCardConstraintsError` is one of the following string values, typed as `HoleCardConstraintViolation`:
 
@@ -428,33 +446,33 @@ throw new InvalidCardError('Xx', { cause: originalError });
 Benchmarked on an Apple M3 Pro MacBook Pro with 36 GB RAM using macOS 26.3. The `rank 7-card hands x1000` entry measures the raw integer evaluation core: roughly 18 million 7-card evaluations per second.
 
 ```
-┌─────────┬─────────────────────────────────┬─────────────┬────────────────────┬──────────┬─────────┐
-│ (index) │ Task Name                       │ ops/sec     │ Average Time (ns)  │ Margin   │ Samples │
-├─────────┼─────────────────────────────────┼─────────────┼────────────────────┼──────────┼─────────┤
-│ 0       │ 'rank 7-card hands x1000'       │ '18,202'    │ 54936.632827950474 │ '±0.19%' │ 9102    │
-│ 1       │ 'evaluate high card'            │ '914,181'   │ 1093.8744429447363 │ '±0.43%' │ 457091  │
-│ 2       │ 'evaluate one pair'             │ '823,219'   │ 1214.7421612688306 │ '±0.40%' │ 411610  │
-│ 3       │ 'evaluate two pair'             │ '808,347'   │ 1237.092304304102  │ '±0.43%' │ 404174  │
-│ 4       │ 'evaluate three of a kind'      │ '843,451'   │ 1185.6051867810047 │ '±0.47%' │ 421726  │
-│ 5       │ 'evaluate straight'             │ '928,154'   │ 1077.4070458004828 │ '±0.35%' │ 464078  │
-│ 6       │ 'evaluate flush'                │ '657,305'   │ 1521.3636905792814 │ '±1.32%' │ 328653  │
-│ 7       │ 'evaluate full house'           │ '914,105'   │ 1093.9654722760874 │ '±0.57%' │ 457053  │
-│ 8       │ 'evaluate four of a kind'       │ '848,706'   │ 1178.2636642995465 │ '±0.73%' │ 424354  │
-│ 9       │ 'evaluate straight flush'       │ '937,862'   │ 1066.2542863348142 │ '±0.09%' │ 468932  │
-│ 10      │ 'evaluate royal flush'          │ '924,572'   │ 1081.5804035140118 │ '±0.09%' │ 462287  │
-│ 11      │ 'odds holdem heads up preflop'  │ '3'         │ 258745033.6        │ '±0.46%' │ 10      │
-│ 12      │ 'odds holdem heads up to flop'  │ '6,713'     │ 148946.85403633394 │ '±0.26%' │ 3357    │
-│ 13      │ 'odds holdem heads up to turn'  │ '139,049'   │ 7191.69599424761   │ '±0.30%' │ 69525   │
-│ 14      │ 'odds holdem heads up to river' │ '1,390,115' │ 719.3646012257714  │ '±0.51%' │ 695058  │
-│ 15      │ 'odds holdem multiway preflop'  │ '3'         │ 311137795.8999994  │ '±0.88%' │ 10      │
-│ 16      │ 'odds holdem multiway to flop'  │ '4,306'     │ 232224.59582374396 │ '±0.33%' │ 2155    │
-│ 17      │ 'odds holdem multiway to turn'  │ '84,077'    │ 11893.760888704976 │ '±0.26%' │ 42039   │
-│ 18      │ 'odds holdem multiway to river' │ '1,082,756' │ 923.5685942766954  │ '±0.50%' │ 541379  │
-└─────────┴─────────────────────────────────┴─────────────┴────────────────────┴──────────┴─────────┘
-odds omaha heads up preflop (single run): 136ms
+┌─────────┬───────────────────────────────────┬─────────────┬────────────────────┬──────────┬─────────┐
+│ (index) │ Task Name                         │ ops/sec     │ Average Time (ns)  │ Margin   │ Samples │
+├─────────┼───────────────────────────────────┼─────────────┼────────────────────┼──────────┼─────────┤
+│ 0       │ 'rank 7-card hands x1000'         │ '18,202'    │ 54936.632827950474 │ '±0.19%' │ 9102    │
+│ 1       │ 'evaluate high card'              │ '914,181'   │ 1093.8744429447363 │ '±0.43%' │ 457091  │
+│ 2       │ 'evaluate one pair'               │ '823,219'   │ 1214.7421612688306 │ '±0.40%' │ 411610  │
+│ 3       │ 'evaluate two pair'               │ '808,347'   │ 1237.092304304102  │ '±0.43%' │ 404174  │
+│ 4       │ 'evaluate three of a kind'        │ '843,451'   │ 1185.6051867810047 │ '±0.47%' │ 421726  │
+│ 5       │ 'evaluate straight'               │ '928,154'   │ 1077.4070458004828 │ '±0.35%' │ 464078  │
+│ 6       │ 'evaluate flush'                  │ '657,305'   │ 1521.3636905792814 │ '±1.32%' │ 328653  │
+│ 7       │ 'evaluate full house'             │ '914,105'   │ 1093.9654722760874 │ '±0.57%' │ 457053  │
+│ 8       │ 'evaluate four of a kind'         │ '848,706'   │ 1178.2636642995465 │ '±0.73%' │ 424354  │
+│ 9       │ 'evaluate straight flush'         │ '937,862'   │ 1066.2542863348142 │ '±0.09%' │ 468932  │
+│ 10      │ 'evaluate royal flush'            │ '924,572'   │ 1081.5804035140118 │ '±0.09%' │ 462287  │
+│ 11      │ 'equity holdem heads up preflop'  │ '3'         │ 258745033.6        │ '±0.46%' │ 10      │
+│ 12      │ 'equity holdem heads up to flop'  │ '6,713'     │ 148946.85403633394 │ '±0.26%' │ 3357    │
+│ 13      │ 'equity holdem heads up to turn'  │ '139,049'   │ 7191.69599424761   │ '±0.30%' │ 69525   │
+│ 14      │ 'equity holdem heads up to river' │ '1,390,115' │ 719.3646012257714  │ '±0.51%' │ 695058  │
+│ 15      │ 'equity holdem multiway preflop'  │ '3'         │ 311137795.8999994  │ '±0.88%' │ 10      │
+│ 16      │ 'equity holdem multiway to flop'  │ '4,306'     │ 232224.59582374396 │ '±0.33%' │ 2155    │
+│ 17      │ 'equity holdem multiway to turn'  │ '84,077'    │ 11893.760888704976 │ '±0.26%' │ 42039   │
+│ 18      │ 'equity holdem multiway to river' │ '1,082,756' │ 923.5685942766954  │ '±0.50%' │ 541379  │
+└─────────┴───────────────────────────────────┴─────────────┴────────────────────┴──────────┴─────────┘
+equity omaha heads up preflop (single run): 136ms
 ```
 
-For comparison, v3 measured 60 ops/sec for `odds holdem heads up to flop` (now 6,713) and could not complete preflop calculations at all; exact heads-up preflop odds now take under 300ms.
+For comparison, v3 measured 60 ops/sec for `equity holdem heads up to flop` (now 6,713) and could not complete preflop calculations at all; exact heads-up preflop odds now take under 300ms.
 
 ## Development
 

@@ -5,7 +5,7 @@ import { FLUSH, NOFLUSH5, NOFLUSH6, NOFLUSH7 } from './tables';
 
 // Performance: ES module imports are live bindings, so the CommonJS build reads an imported
 // name as a property access on the required module (`constants_1.SUIT_COUNT`) on every use.
-// That is harmless in cold code, but `rankN` runs in the innermost loop of every odds
+// That is harmless in cold code, but `rankN` runs in the innermost loop of every equity
 // calculation, where the per-read overhead benchmarks ~10% slower than a local const.  Copying
 // the (never-reassigned) values once at module load keeps `constants.ts` as the single source
 // of truth without that cost.

@@ -1,4 +1,5 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { equity } from '../equity';
 import {
   DeckExhaustedError,
   DuplicateCardError,
@@ -13,9 +14,8 @@ import {
   UnsatisfiableHandError,
 } from '../errors';
 import { evaluate } from '../evaluate';
+import { equityHoldem } from '../helpers/equityHoldem';
 import { evaluateHoldem } from '../helpers/evaluateHoldem';
-import { oddsHoldem } from '../helpers/oddsHoldem';
-import { odds } from '../odds';
 
 const ERROR_CLASSES = [
   DeckExhaustedError,
@@ -104,7 +104,7 @@ describe('errors', () => {
       ];
 
       try {
-        oddsHoldem(allHoleCards, []);
+        equityHoldem(allHoleCards, []);
         throw new Error('expected a DuplicateCardError');
       } catch (error) {
         expect(error).toBeInstanceOf(DuplicateCardError);
@@ -134,7 +134,7 @@ describe('errors', () => {
       ];
 
       try {
-        oddsHoldem(allHoleCards, []);
+        equityHoldem(allHoleCards, []);
         throw new Error('expected an InvalidHoleCardCountError');
       } catch (error) {
         expect(error).toBeInstanceOf(InvalidHoleCardCountError);
@@ -151,7 +151,7 @@ describe('errors', () => {
       const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
       try {
-        oddsHoldem([['As', 'Ks']], communityCards);
+        equityHoldem([['As', 'Ks']], communityCards);
         throw new Error('expected an InvalidCommunityCardCountError');
       } catch (error) {
         expect(error).toBeInstanceOf(InvalidCommunityCardCountError);
@@ -192,7 +192,7 @@ describe('errors', () => {
   describe('InsufficientCardsError', () => {
     it('is thrown when a game cannot produce a 5-card hand', () => {
       try {
-        odds([['As', 'Ks']], {
+        equity([['As', 'Ks']], {
           communityCards: [],
           expectedCommunityCardCount: 0,
           expectedHoleCardCount: 2,
@@ -215,7 +215,7 @@ describe('errors', () => {
   describe('UnsatisfiableHandError', () => {
     it('is thrown when hole card usage constraints admit no 5-card hand', () => {
       try {
-        odds([['As', 'Ks', 'Qs', 'Js']], {
+        equity([['As', 'Ks', 'Qs', 'Js']], {
           communityCards: [],
           expectedCommunityCardCount: 2,
           expectedHoleCardCount: 4,
@@ -238,7 +238,7 @@ describe('errors', () => {
       const allHoleCards: Hand[] = new Array(8).fill([]);
 
       try {
-        odds(allHoleCards, {
+        equity(allHoleCards, {
           communityCards: [],
           expectedCommunityCardCount: 0,
           expectedHoleCardCount: 7,
@@ -262,7 +262,7 @@ describe('errors', () => {
       ];
 
       try {
-        oddsHoldem(allHoleCards, [], { maximumEvaluations: 1000 });
+        equityHoldem(allHoleCards, [], { maximumEvaluations: 1000 });
         throw new Error('expected a MaximumEvaluationsExceededError');
       } catch (error) {
         expect(error).toBeInstanceOf(MaximumEvaluationsExceededError);

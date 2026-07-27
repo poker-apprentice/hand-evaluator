@@ -1,13 +1,16 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { EquityOptions, equity } from '../equity';
 import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../errors';
-import { OddsOptions, odds } from '../odds';
 
-export type OddsPineappleOptions = Pick<OddsOptions, 'maximumEvaluations'>;
+export type EquityPineappleOptions = Pick<EquityOptions, 'maximumEvaluations'>;
 
-export const oddsPineapple = (
+/** @deprecated Use {@link EquityPineappleOptions} instead. */
+export type OddsPineappleOptions = EquityPineappleOptions;
+
+export const equityPineapple = (
   allHoleCards: Hand[],
   communityCards: Card[],
-  options: OddsPineappleOptions = {},
+  options: EquityPineappleOptions = {},
 ) => {
   const invalidHandIndex = allHoleCards.findIndex((holeCards) => holeCards.length > 3);
   if (invalidHandIndex !== -1) {
@@ -16,7 +19,7 @@ export const oddsPineapple = (
   if (communityCards && communityCards.length > 5) {
     throw new InvalidCommunityCardCountError(5, communityCards.length);
   }
-  return odds(allHoleCards, {
+  return equity(allHoleCards, {
     communityCards,
     expectedCommunityCardCount: 5,
     expectedHoleCardCount: 3,
@@ -25,3 +28,6 @@ export const oddsPineapple = (
     maximumHoleCardsUsed: 2,
   });
 };
+
+/** @deprecated Use {@link equityPineapple} instead. */
+export const oddsPineapple = equityPineapple;
