@@ -1,6 +1,7 @@
+import { InvalidHoleCardCountError } from '../errors';
 import { simulate, SimulateOptions } from '../simulate';
 
-type Options = Omit<
+export type SimulateStudOptions = Omit<
   SimulateOptions,
   | 'expectedCommunityCardCount'
   | 'expectedHoleCardCount'
@@ -9,9 +10,14 @@ type Options = Omit<
   | 'communityCards'
 >;
 
-export const simulateStud = (options: Options) => {
-  if (options.allHoleCards.some((holeCards) => holeCards.length > 7)) {
-    throw new Error('Each collection of hole cards accept a maximum of 7 elements');
+export const simulateStud = (options: SimulateStudOptions) => {
+  const invalidHandIndex = options.allHoleCards.findIndex((holeCards) => holeCards.length > 7);
+  if (invalidHandIndex !== -1) {
+    throw new InvalidHoleCardCountError(
+      7,
+      options.allHoleCards[invalidHandIndex].length,
+      invalidHandIndex,
+    );
   }
   return simulate({
     ...options,

@@ -1,5 +1,6 @@
 import { Card, Hand } from '@poker-apprentice/types';
 import { createEngine } from './core/enumerate';
+import { MaximumEvaluationsExceededError } from './errors';
 import { Odds } from './types';
 
 export interface OddsOptions {
@@ -37,11 +38,7 @@ export const odds = (allHoleCards: Hand[], options: OddsOptions): Odds[] => {
   const maximumEvaluations = options.maximumEvaluations ?? DEFAULT_MAXIMUM_EVALUATIONS;
   const requiredEvaluations = engine.estimatedEvaluations;
   if (requiredEvaluations > maximumEvaluations) {
-    throw new Error(
-      `odds() would require ${requiredEvaluations} hand evaluations, which exceeds ` +
-        `maximumEvaluations (${maximumEvaluations}). Use simulate() for an approximate ` +
-        `result, or increase options.maximumEvaluations.`,
-    );
+    throw new MaximumEvaluationsExceededError(requiredEvaluations, maximumEvaluations);
   }
 
   engine.enumerate();

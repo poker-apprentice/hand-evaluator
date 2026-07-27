@@ -1,4 +1,5 @@
 import { Hand } from '@poker-apprentice/types';
+import { InvalidHoleCardCountError } from '../../errors';
 import { simulateStud } from '../../helpers/simulateStud';
 import * as simulateModule from '../../simulate';
 
@@ -30,8 +31,6 @@ describe('simulateStud', () => {
       ['Jd', 'Jh', '2h', 'Jc', '2s', '3c', '4h', '5d'],
     ];
 
-    expect(() => simulateStud({ allHoleCards })).toThrow(
-      'Each collection of hole cards accept a maximum of 7 elements',
-    );
+    expect(() => simulateStud({ allHoleCards })).toThrow(InvalidHoleCardCountError);
   });
 });

@@ -13,6 +13,8 @@ Version 4 replaces the hand-evaluation core with an integer-based, lookup-table 
 - **`simulate` is now an infinite generator.** It samples scenarios with replacement and never exhausts; consumers stop iterating when satisfied. A `samplesPerUpdate` option controls how many scenarios are evaluated per yield.
 - **A straight-flush detection bug is fixed.** v3 could report a flush for hands of 6+ cards containing a straight flush whose lowest card shared a rank with another card (e.g. `Kh Qh Jh Th 9h 9d 3s`).
 
+Additionally, every failure is now reported as a named error class carrying structured properties rather than a bare `Error` with a message to parse — see [Errors](#errors). Code matching on `error.message` should switch to `instanceof` checks, as some wordings have changed.
+
 ## Usage
 
 ### Types
@@ -173,7 +175,7 @@ for (const result of generate) {
 
 In addition to the core functions, there are some poker game-specific functions that wrap these core functions for ease of use. These functions are effectively the same as calling the `evaluate` of `odds` function directly with the appropriate option values prepopulated.
 
-The functions also perform appropriate error checking/throwing to ensure that the `holeCards` and `communityCards` are of the correct length for each game.
+The functions also perform appropriate error checking/throwing to ensure that the `holeCards` and `communityCards` are of the correct length for each game. See [Errors](#errors) for the classes they throw.
 
 #### `evaluateHoldem`
 
@@ -360,6 +362,65 @@ for (const result of generate) {
     break;
   }
 }
+```
+
+### Errors
+
+Every error thrown by this package is an instance of a named class exported from the package root, each carrying structured properties describing the failure. All of them extend `HandEvaluatorError`, so a single `instanceof` check distinguishes a problem originating here from any other exception.
+
+```ts
+import {
+  DuplicateCardError,
+  HandEvaluatorError,
+  MaximumEvaluationsExceededError,
+  oddsHoldem,
+} from '@poker-apprentice/hand-evaluator';
+
+try {
+  oddsHoldem(allHoleCards, communityCards);
+} catch (error) {
+  if (error instanceof DuplicateCardError) {
+    console.error(`${error.card} was supplied more than once`);
+  } else if (error instanceof MaximumEvaluationsExceededError) {
+    console.error(`needs ${error.requiredEvaluations} evaluations; use simulate() instead`);
+  } else if (error instanceof HandEvaluatorError) {
+    console.error(error.message);
+  } else {
+    throw error;
+  }
+}
+```
+
+| Error                             | Thrown when                                                                             | Properties                                                        |
+| --------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `HandEvaluatorError`              | Never directly; the abstract base class of every error below.                           | —                                                                 |
+| `InvalidCardError`                | A value that is not a recognized card is supplied.                                      | `card`                                                            |
+| `DuplicateCardError`              | The same card appears more than once across all hole and community cards.               | `card`                                                            |
+| `InvalidHoleCardCountError`       | More hole cards are supplied than the game allows.                                      | `maximum`, `actual`, `handIndex`                                  |
+| `InvalidCommunityCardCountError`  | More community cards are supplied than the game allows.                                 | `maximum`, `actual`                                               |
+| `NoCardsSuppliedError`            | `evaluate` is called with neither hole cards nor community cards.                       | —                                                                 |
+| `InvalidHoleCardConstraintsError` | `minimumHoleCards`/`maximumHoleCards` contradict each other or the hole cards supplied. | `reason`, `minimumHoleCards`, `maximumHoleCards`, `holeCardCount` |
+| `InsufficientCardsError`          | Too few cards are available to form a 5-card hand.                                      | `requiredCount`, `suppliedCount`                                  |
+| `UnsatisfiableHandError`          | The hole-card usage rules admit no valid 5-card hand.                                   | `minimumHoleCards`, `maximumHoleCards`, `communityCardCount`      |
+| `DeckExhaustedError`              | More unknown cards must be dealt than remain in the deck.                               | `requiredCount`, `remainingCount`                                 |
+| `MaximumEvaluationsExceededError` | `odds` would require more hand evaluations than `maximumEvaluations` permits.           | `requiredEvaluations`, `maximumEvaluations`                       |
+
+`handIndex` is set only by functions accepting multiple hands, and identifies the offending entry in `allHoleCards`; it is `undefined` for single-hand functions such as `evaluateHoldem`.
+
+`InsufficientCardsError` and `UnsatisfiableHandError` never escape `evaluate`, which falls back to describing the best partial hand rather than throwing. They surface from `odds` and `simulate`, which require complete 5-card hands.
+
+The `reason` property of `InvalidHoleCardConstraintsError` is one of the following string values, typed as `HoleCardConstraintViolation`:
+
+| `reason`                            | Meaning                                                               |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| `'minimumExceedsSuppliedHoleCards'` | `minimumHoleCards` is greater than the number of hole cards supplied. |
+| `'minimumExceedsMaximum'`           | `minimumHoleCards` is greater than `maximumHoleCards`.                |
+| `'maximumNotPositive'`              | `maximumHoleCards` resolves to zero or less.                          |
+
+Every error also carries a `name` matching its class name, and accepts a standard `cause` option, so wrapping and rethrowing works as expected:
+
+```ts
+throw new InvalidCardError('Xx', { cause: originalError });
 ```
 
 ## Benchmarks

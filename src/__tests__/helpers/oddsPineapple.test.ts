@@ -1,4 +1,5 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../../errors';
 import { oddsPineapple } from '../../helpers/oddsPineapple';
 import * as oddsModule from '../../odds';
 
@@ -28,9 +29,7 @@ describe('oddsPineapple', () => {
     ];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => oddsPineapple(allHoleCards, communityCards)).toThrow(
-      'Each collection of hole cards accept a maximum of 3 elements',
-    );
+    expect(() => oddsPineapple(allHoleCards, communityCards)).toThrow(InvalidHoleCardCountError);
   });
 
   it('throws if too many community cards are provided', () => {
@@ -41,7 +40,7 @@ describe('oddsPineapple', () => {
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
     expect(() => oddsPineapple(allHoleCards, communityCards)).toThrow(
-      'communityCards accepts a maximum of 5 elements',
+      InvalidCommunityCardCountError,
     );
   });
 });

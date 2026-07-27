@@ -1,4 +1,5 @@
 import { Card } from '@poker-apprentice/types';
+import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../../errors';
 import * as evaluateModel from '../../evaluate';
 import { evaluateHoldem } from '../../helpers/evaluateHoldem';
 
@@ -21,9 +22,7 @@ describe('evaluateHoldem', () => {
     const holeCards: Card[] = ['As', 'Kd', 'Td'];
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
-    expect(() => evaluateHoldem({ holeCards, communityCards })).toThrow(
-      'holeCards accepts a maximum of 2 elements',
-    );
+    expect(() => evaluateHoldem({ holeCards, communityCards })).toThrow(InvalidHoleCardCountError);
   });
 
   it('throws if too many community cards are provided', () => {
@@ -31,7 +30,7 @@ describe('evaluateHoldem', () => {
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
     expect(() => evaluateHoldem({ holeCards, communityCards })).toThrow(
-      'communityCards accepts a maximum of 5 elements',
+      InvalidCommunityCardCountError,
     );
   });
 });

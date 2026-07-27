@@ -1,4 +1,5 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../../errors';
 import { simulateHoldem } from '../../helpers/simulateHoldem';
 import * as simulateModule from '../../simulate';
 
@@ -33,7 +34,7 @@ describe('simulateHoldem', () => {
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s'];
 
     expect(() => simulateHoldem({ allHoleCards, communityCards })).toThrow(
-      'Each collection of hole cards accept a maximum of 2 elements',
+      InvalidHoleCardCountError,
     );
   });
 
@@ -45,7 +46,7 @@ describe('simulateHoldem', () => {
     const communityCards: Card[] = ['Ac', '9h', 'Qd', '2d', '2s', 'Td'];
 
     expect(() => simulateHoldem({ allHoleCards, communityCards })).toThrow(
-      'communityCards accepts a maximum of 5 elements',
+      InvalidCommunityCardCountError,
     );
   });
 });

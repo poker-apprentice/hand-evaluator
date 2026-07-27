@@ -1,18 +1,20 @@
 import { Card, Hand } from '@poker-apprentice/types';
+import { InvalidCommunityCardCountError, InvalidHoleCardCountError } from '../errors';
 import { OddsOptions, odds } from '../odds';
 
-type HelperOptions = Pick<OddsOptions, 'maximumEvaluations'>;
+export type OddsOmahaOptions = Pick<OddsOptions, 'maximumEvaluations'>;
 
 export const oddsOmaha = (
   allHoleCards: Hand[],
   communityCards: Card[],
-  options: HelperOptions = {},
+  options: OddsOmahaOptions = {},
 ) => {
-  if (allHoleCards.some((holeCards) => holeCards.length > 4)) {
-    throw new Error('Each collection of hole cards accept a maximum of 4 elements');
+  const invalidHandIndex = allHoleCards.findIndex((holeCards) => holeCards.length > 4);
+  if (invalidHandIndex !== -1) {
+    throw new InvalidHoleCardCountError(4, allHoleCards[invalidHandIndex].length, invalidHandIndex);
   }
   if (communityCards && communityCards.length > 5) {
-    throw new Error('communityCards accepts a maximum of 5 elements');
+    throw new InvalidCommunityCardCountError(5, communityCards.length);
   }
   return odds(allHoleCards, {
     communityCards,
